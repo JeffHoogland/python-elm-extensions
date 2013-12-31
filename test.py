@@ -6,11 +6,12 @@ from efl.elementary.window import StandardWindow
 from efl.elementary.scroller import Scroller
 from efl.elementary.label import Label
 from efl.elementary.button import Button
-from efl.evas import EVAS_HINT_EXPAND
+from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
 import sortedlist as sl
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
+FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 
 ROWS = 80
 COLUMNS = 6
@@ -35,7 +36,8 @@ class derp(object):
                     ("Column " + str(i), True if i != 2 else False)
                     )
 
-        slist = sl.SortedList(scr, titles)
+        slist = sl.SortedList(scr, titles=titles, size_hint_weight=EXPAND_BOTH,
+            size_hint_align=FILL_BOTH, homogeneous=True)
         scr.content = slist
         scr.show()
 

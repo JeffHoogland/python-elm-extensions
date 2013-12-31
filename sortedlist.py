@@ -16,6 +16,8 @@ FILL_HORIZ = EVAS_HINT_FILL, 0.5
 # - custom cb func for sorting
 # - override Table widgets methods
 # - move this over to Cython to increase performance if needed
+# - custom theme
+# - separate title bar?
 #
 
 class SortedList(Table):
@@ -40,16 +42,17 @@ class SortedList(Table):
 
     """
 
-    def __init__(self, parent_widget, titles=None, initial_sort=0):
+    def __init__(self, parent_widget, titles=None, initial_sort=0,
+        ascending=True, *args, **kwargs):
 
         self.header = titles
         self.sort_column = initial_sort
+        self.sort_column_ascending = ascending
 
         self.rows = []
         self.header_row = []
 
-        Table.__init__(self, parent_widget, size_hint_weight=EXPAND_BOTH,
-            size_hint_align=FILL_BOTH, homogeneous=True)
+        Table.__init__(self, parent_widget, *args, **kwargs)
 
         if titles is not None:
             self.header_row_pack(titles)
@@ -123,9 +126,14 @@ class SortedList(Table):
         """
         if isinstance(row, int):
             row_index = row
-            row = self.rows[row]
         else:
             x, row_index, w, h = table_pack_get(row[0])
+
+        # print("row index: " + str(row_index-1))
+        # print("length: " + str(len(self.rows)))
+        # print("sort_data: " + str(row[self.sort_column].data["sort_data"]))
+
+        row = self.rows.pop(row_index-1)
 
         for item in row:
             self.unpack(item)
@@ -134,8 +142,8 @@ class SortedList(Table):
             else:
                 item.hide()
 
-        self.rows.pop(row_index-1)
-        self.sort_by_column(self.sort_column)
+        self.sort_by_column(self.sort_column,
+            ascending=self.sort_column_ascending)
 
     def reverse(self):
         rev_order = reversed(range(len(self.rows)))
@@ -144,14 +152,16 @@ class SortedList(Table):
 
         lb = self.header_row[self.sort_column].part_content_get("icon")
         if lb is not None:
-            if lb.text == u"⬆":
-                lb.text = u"⬇"
-            else:
+            if self.sort_column_ascending:
                 lb.text = u"⬆"
+                self.sort_column_ascending = False
+            else:
+                lb.text = u"⬇"
+                self.sort_column_ascending = True
 
         self.rows.reverse()
 
-    def sort_by_column(self, col):
+    def sort_by_column(self, col, ascending=True):
 
         assert col >= 0
         assert col < len(self.header_row)
@@ -160,9 +170,15 @@ class SortedList(Table):
 
         btn = self.header_row[col]
         ic = Label(btn)
-        ic.text = u"⬇"
         btn.part_content_set("icon", ic)
         ic.show()
+
+        if True: #ascending:
+            ic.text = u"⬇"
+            self.sort_column_ascending = True
+        # else:
+        #     ic.text = u"⬆"
+        #     self.sort_column_ascending = False
 
         orig_col = [
             (i, x[col].data.get("sort_data", x[col].text)) \
@@ -171,8 +187,18 @@ class SortedList(Table):
         sorted_col = sorted(orig_col, key=lambda e: e[1])
         new_order = [x[0] for x in sorted_col]
 
+        # print(new_order)
+
+        # if not ascending:
+        #     new_order.reverse()
+
+        # print(new_order)
+
         for y, new_y in enumerate(new_order):
             self.row_pack_set(y, new_y)
 
-        self.rows.sort(key=lambda e: e[col].data.get("sort_data", e[col].text))
+        self.rows.sort(
+            key=lambda e: e[col].data.get("sort_data", e[col].text),
+            #reverse=False if ascending else True
+            )
         self.sort_column = col
