@@ -13,6 +13,8 @@ FILL_HORIZ = EVAS_HINT_FILL, 0.5
 # - populate with an idler
 # - custom cb func for sorting
 # - display sort column in the title button
+# - override Table widgets methods
+# - move this over to Cython to increase performance if needed
 #
 
 class SortedList(Table):
@@ -53,14 +55,29 @@ class SortedList(Table):
 
     def header_row_pack(self, titles):
 
-        """Takes a list of tuples (string, bool) and packs them to the first
-        row of the table."""
+        """Takes a list (or a tuple) of tuples (string, bool) and packs them to
+        the first row of the table."""
 
-        for count, title in enumerate(titles):
+        assert isinstance(titles, (list, tuple))
+        for t in titles:
+            assert isinstance(t, tuple)
+            assert len(t) == 2
+            title, sortable = t
+            assert isinstance(title, basestring)
+            assert isinstance(sortable, bool)
+
+        def sort_btn_cb(button, col):
+            if self.sort_column == col:
+                self.reverse()
+            else:
+                self.sort_by_column(col)
+
+        for count, t in enumerate(titles):
+            title, sortable = t
             btn = Button(self, size_hint_weight=EXPAND_HORIZ,
-                size_hint_align=FILL_HORIZ, text=title[0])
-            btn.callback_clicked_add(self.sort_btn_cb, count)
-            if not title[1]:
+                size_hint_align=FILL_HORIZ, text=title)
+            btn.callback_clicked_add(sort_btn_cb, count)
+            if not sortable:
                 btn.disabled = True
             btn.show()
             self.pack(btn, count, 0, 1, 1)
@@ -96,12 +113,6 @@ class SortedList(Table):
         for x, item in enumerate(self.rows[new_y]):
             table_pack_set(item, x, y+1, 1, 1)
 
-    def sort_btn_cb(self, button, col):
-        if self.sort_column == col:
-            self.reverse()
-        else:
-            self.sort_by_column(col)
-
     def reverse(self):
         rev_order = reversed(range(len(self.rows)))
         for y, new_y in enumerate(rev_order):
@@ -110,6 +121,10 @@ class SortedList(Table):
         self.rows.reverse()
 
     def sort_by_column(self, col):
+
+        assert col >= 0
+        assert col < len(self.header_row)
+
         orig_col = [
             (i, x[col].data.get("sort_data", x[col].text)) \
             for i, x in enumerate(self.rows)
