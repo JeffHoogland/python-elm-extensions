@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from efl.elementary.table import Table, table_pack_get, table_pack_set
 from efl.elementary.label import Label
 from efl.elementary.button import Button
@@ -12,7 +14,6 @@ FILL_HORIZ = EVAS_HINT_FILL, 0.5
 # TODO ideas:
 # - populate with an idler
 # - custom cb func for sorting
-# - display sort column in the title button
 # - override Table widgets methods
 # - move this over to Cython to increase performance if needed
 #
@@ -141,12 +142,27 @@ class SortedList(Table):
         for y, new_y in enumerate(rev_order):
             self.row_pack_set(y, new_y)
 
+        lb = self.header_row[self.sort_column].part_content_get("icon")
+        if lb is not None:
+            if lb.text == u"⬆":
+                lb.text = u"⬇"
+            else:
+                lb.text = u"⬆"
+
         self.rows.reverse()
 
     def sort_by_column(self, col):
 
         assert col >= 0
         assert col < len(self.header_row)
+
+        self.header_row[self.sort_column].icon = None
+
+        btn = self.header_row[col]
+        ic = Label(btn)
+        ic.text = u"⬇"
+        btn.part_content_set("icon", ic)
+        ic.show()
 
         orig_col = [
             (i, x[col].data.get("sort_data", x[col].text)) \
