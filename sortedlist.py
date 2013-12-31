@@ -8,12 +8,35 @@ EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 FILL_HORIZ = EVAS_HINT_FILL, 0.5
 
-# Argument "titles" is a list, with each element being a tuple:
-# (<Display Text>, <Sortable>)
-
-# Note: Cell span is assumed to be 1 in both directions
+#
+# TODO ideas:
+# - populate with an idler
+# - custom cb func for sorting
+# - display sort column in the title button
+#
 
 class SortedList(Table):
+
+    """
+
+    A Table that has automatically sorted rows, with user selectable column
+    sort.
+
+    Argument "titles" is a list, with each element being a tuple:
+    (<Display Text>, <Sortable>)
+
+    Cell span is assumed to be 1 in both directions.
+
+    Items are Elementary Widgets that can have sort data placed in their data
+    dict:
+
+        item.data["sort_data"] = data
+
+    The data from the widgets is passed to Python sort() function, if sort data
+    is not found the primary text field of the widget is used as fallback.
+
+    """
+
     def __init__(self, parent_widget, titles=None, initial_sort=0):
 
         self.header = titles
@@ -29,6 +52,10 @@ class SortedList(Table):
             self.header_row_pack(titles)
 
     def header_row_pack(self, titles):
+
+        """Takes a list of tuples (string, bool) and packs them to the first
+        row of the table."""
+
         for count, title in enumerate(titles):
             btn = Button(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ, text=title[0])
@@ -56,11 +83,15 @@ class SortedList(Table):
         self.rows.append(row)
 
         if sort:
-            self.sort(self.sort_column)
+            self.sort_by_column(self.sort_column)
 
     def row_pack_set(self, y, new_y):
 
-        """Changes the position of a row in the table"""
+        """Changes the position of a row in the table.
+
+        Doesn't handle sorting automatically.
+
+        """
 
         for x, item in enumerate(self.rows[new_y]):
             table_pack_set(item, x, y+1, 1, 1)
@@ -69,7 +100,7 @@ class SortedList(Table):
         if self.sort_column == col:
             self.reverse()
         else:
-            self.sort(col)
+            self.sort_by_column(col)
 
     def reverse(self):
         rev_order = reversed(range(len(self.rows)))
@@ -78,8 +109,11 @@ class SortedList(Table):
 
         self.rows.reverse()
 
-    def sort(self, col):
-        orig_col = [(i, x[col].data.get("sort_data", x[col].text)) for i, x in enumerate(self.rows)]
+    def sort_by_column(self, col):
+        orig_col = [
+            (i, x[col].data.get("sort_data", x[col].text)) \
+            for i, x in enumerate(self.rows)
+            ]
         sorted_col = sorted(orig_col, key=lambda e: e[1])
         new_order = [x[0] for x in sorted_col]
 

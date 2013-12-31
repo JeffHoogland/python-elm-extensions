@@ -41,7 +41,7 @@ class derp(object):
                 lb.show()
                 row.append(lb)
             slist.row_pack(row, sort=False)
-        slist.sort(0)
+        slist.sort_by_column(0)
         slist.show()
 
         win.resize(600, 400)
