@@ -81,7 +81,7 @@ class SortedList(Table):
                 btn.disabled = True
             btn.show()
             self.pack(btn, count, 0, 1, 1)
-            self.header_row.append(title[0])
+            self.header_row.append(btn)
 
     def row_pack(self, row, sort=True):
 
@@ -112,6 +112,29 @@ class SortedList(Table):
 
         for x, item in enumerate(self.rows[new_y]):
             table_pack_set(item, x, y+1, 1, 1)
+
+    def row_unpack(self, row, delete=False):
+
+        """Unpacks and hides, and optionally deletes, a row of items.
+
+        The argument row can either be the row itself or its index number.
+
+        """
+        if isinstance(row, int):
+            row_index = row
+            row = self.rows[row]
+        else:
+            x, row_index, w, h = table_pack_get(row[0])
+
+        for item in row:
+            self.unpack(item)
+            if delete:
+                item.delete()
+            else:
+                item.hide()
+
+        self.rows.pop(row_index-1)
+        self.sort_by_column(self.sort_column)
 
     def reverse(self):
         rev_order = reversed(range(len(self.rows)))

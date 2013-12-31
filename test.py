@@ -5,6 +5,7 @@ elm.init()
 from efl.elementary.window import StandardWindow
 from efl.elementary.scroller import Scroller
 from efl.elementary.label import Label
+from efl.elementary.button import Button
 from efl.evas import EVAS_HINT_EXPAND
 
 import sortedlist as sl
@@ -25,7 +26,14 @@ class derp(object):
 
         titles = []
         for i in range(COLUMNS):
-            titles.append(("Column " + str(i+1), True if i != 2 else False))
+            if i == 0:
+                titles.append(
+                    ("", False)
+                    )
+            else:
+                titles.append(
+                    ("Column " + str(i), True if i != 2 else False)
+                    )
 
         slist = sl.SortedList(scr, titles)
         scr.content = slist
@@ -34,14 +42,23 @@ class derp(object):
         for i in range(ROWS):
             row = []
             for j in range(COLUMNS):
-                data = random.randint(0, ROWS*COLUMNS)
-                lb = Label(slist)
-                lb.text=str(data)
-                lb.data["sort_data"] = data
-                lb.show()
-                row.append(lb)
+                if j == 0:
+                    btn = Button(slist)
+                    btn.text = "Delete row"
+                    btn.callback_clicked_add(
+                        lambda x, y=row: slist.row_unpack(y, delete=True)
+                        )
+                    btn.show()
+                    row.append(btn)
+                else:
+                    data = random.randint(0, ROWS*COLUMNS)
+                    lb = Label(slist)
+                    lb.text=str(data)
+                    lb.data["sort_data"] = data
+                    lb.show()
+                    row.append(lb)
             slist.row_pack(row, sort=False)
-        slist.sort_by_column(0)
+        slist.sort_by_column(1)
         slist.show()
 
         win.resize(600, 400)
