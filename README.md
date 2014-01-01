@@ -1,1 +1,1 @@
-An exenstion for python elementary table class
+An extension for Python Elementary Table widget, with automated row sorting
