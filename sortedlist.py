@@ -173,12 +173,12 @@ class SortedList(Table):
         btn.part_content_set("icon", ic)
         ic.show()
 
-        if True: #ascending:
+        if ascending == True: #ascending:
             ic.text = u"⬇"
             self.sort_column_ascending = True
-        # else:
-        #     ic.text = u"⬆"
-        #     self.sort_column_ascending = False
+        else:
+             ic.text = u"⬆"
+             self.sort_column_ascending = False
 
         orig_col = [
             (i, x[col].data.get("sort_data", x[col].text)) \
@@ -189,8 +189,8 @@ class SortedList(Table):
 
         # print(new_order)
 
-        # if not ascending:
-        #     new_order.reverse()
+        if not ascending:
+             new_order.reverse()
 
         # print(new_order)
 
@@ -202,3 +202,6 @@ class SortedList(Table):
             #reverse=False if ascending else True
             )
         self.sort_column = col
+
+    def update(self):
+        self.sort_by_column(self.sort_column, self.sort_column_ascending)

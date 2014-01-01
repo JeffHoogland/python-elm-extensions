@@ -13,8 +13,8 @@ import sortedlist as sl
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 
-ROWS = 80
-COLUMNS = 6
+ROWS = 15
+COLUMNS = 5
 
 class derp(object):
     def __init__( self ):
