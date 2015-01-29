@@ -4,7 +4,7 @@ from efl.elementary.list import List, ELM_LIST_LIMIT, ELM_LIST_COMPRESS
 from efl.elementary.label import Label
 from efl.elementary.box import Box
 from efl.elementary.button import Button
-from efl.elementary.scroller import Scroller, Scrollable, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON, ELM_SCROLLER_POLICY_AUTO
+from efl.elementary.scroller import Scroller, Scrollable, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON, ELM_SCROLLER_POLICY_AUTO, ELM_SCROLLER_MOVEMENT_BLOCK_VERTICAL
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
@@ -46,7 +46,7 @@ class SortedList(Box):
         self.list_box.horizontal = True
         self.list_box.show()
         
-        scr.policy_set(ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON)
+        #scr.policy_set(ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON)
         scr.content = self.list_box
         scr.show()
         
@@ -78,6 +78,7 @@ class SortedList(Box):
             else:
                 self.sort_by_column(col)
 
+        lastcol = len(titles) - 1
         for count, t in enumerate(titles):
             title, sortable = t
             btn = Button(self, size_hint_weight=EXPAND_HORIZ,
@@ -90,11 +91,22 @@ class SortedList(Box):
             self.header_row.append(btn)
             
             elm_list = ScrollableList(self, size_hint_weight=EXPAND_BOTH,  size_hint_align=FILL_BOTH)
-            elm_list.policy_set(ELM_SCROLLER_POLICY_AUTO, ELM_SCROLLER_POLICY_OFF)
+            if count < lastcol:
+                elm_list.policy_set(ELM_SCROLLER_POLICY_AUTO, ELM_SCROLLER_POLICY_OFF)
+                elm_list.movement_block = ELM_SCROLLER_MOVEMENT_BLOCK_VERTICAL
+            else:
+                elm_list.callback_edge_top_add(self.scrolling, "top")
+                elm_list.callback_edge_bottom_add(self.scrolling, "bottom")
+                elm_list.callback_scroll_add(self.scrolling, "scrolling")
+                elm_list.callback_scroll_up_add(self.scrolling, "up")
+                elm_list.callback_scroll_down_add(self.scrolling, "down")
             elm_list.go()
             elm_list.show()
             self.list_box.pack_end(elm_list)
             self.lists.append(elm_list)
+            
+    def scrolling(self, scroller, the_text):
+        print the_text
 
     def row_pack(self, row, sort=True):
 
