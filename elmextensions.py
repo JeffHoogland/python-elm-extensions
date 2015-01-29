@@ -95,11 +95,10 @@ class EmbeddedTerminal(Box):
     def command_done(self, cmd, event, *args, **kwargs):
         self.outPut.entry_append("---------------------------------")
         self.outPut.entry_append("<br>")
+        self.cmd_exe = None
         if self.done_cb:
             if callable(self.done_cb):
                 self.done_cb()
-        self.cmd_exe = None
-        self.done_cb = None
 
 class SortedList(Box):
 
@@ -217,7 +216,7 @@ class SortedList(Box):
         if isinstance(row, int):
             row_index = row
         else:
-            row_index = self.rows.index(row)
+            row_index = self.rows.index(row)+1
 
         # print("row index: " + str(row_index-1))
         # print("length: " + str(len(self.rows)))
