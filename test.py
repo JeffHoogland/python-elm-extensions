@@ -14,7 +14,7 @@ from elmextensions import SortedList
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 
-ROWS = 15
+ROWS = 30
 COLUMNS = 5
 
 class derp(object):
