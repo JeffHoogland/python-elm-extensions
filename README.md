@@ -3,3 +3,6 @@ A library that contains a few more complex elementary objects for easy importain
 Current Objects:
 - SortedList
 - EmbeddedTerminal
+
+Credits: 
+- [Jeff Hoogland](http://www.jeffhoogland.com/)
