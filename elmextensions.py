@@ -107,6 +107,10 @@ class SortedList(Box):
             
     def scrolling(self, scroller, the_text):
         print the_text
+        x, y, w, h = scroller.region_get()
+        lastcol = len(self.lists) - 1
+        for i in range(lastcol + 1):
+            self.lists[i].region_bring_in(x,y,w,h)
 
     def row_pack(self, row, sort=True):
 
