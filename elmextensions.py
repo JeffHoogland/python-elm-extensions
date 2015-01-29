@@ -15,6 +15,10 @@ FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 FILL_HORIZ = EVAS_HINT_FILL, 0.5
 ALIGN_CENTER = 0.5, 0.5
 
+class FileSelector(Box):
+    def __init__(self, parent_widget, titles=None, *args, **kwargs):
+        Box.__init__(self, parent_widget, *args, **kwargs)
+
 class EmbeddedTerminal(Box):
     def __init__(self, parent_widget, titles=None, *args, **kwargs):
         Box.__init__(self, parent_widget, *args, **kwargs)
@@ -53,6 +57,7 @@ class EmbeddedTerminal(Box):
         self.pack_end(frame)
         
         self.cmd_exe = None
+        self.done_cb = None
     
     def enterPressed(self, btn):
         if not self.cmd_exe:
@@ -62,7 +67,7 @@ class EmbeddedTerminal(Box):
             ourResult = self.cmd_exe.send("%s\n"%self.inPut.text)
             self.inPut.text = ""
             
-    def runCommand(self, command):
+    def runCommand(self, command, done_cb=None):
         self.cmd_exe = cmd = ecore.Exe(
             command,
             ecore.ECORE_EXE_PIPE_READ |
@@ -73,6 +78,8 @@ class EmbeddedTerminal(Box):
         cmd.on_data_event_add(self.received_data)
         cmd.on_error_event_add(self.received_error)
         cmd.on_del_event_add(self.command_done)
+        
+        self.done_cb = done_cb
     
     def command_started(self, cmd, event, *args, **kwargs):
         self.outPut.entry_append("---------------------------------")
@@ -88,8 +95,11 @@ class EmbeddedTerminal(Box):
     def command_done(self, cmd, event, *args, **kwargs):
         self.outPut.entry_append("---------------------------------")
         self.outPut.entry_append("<br>")
+        if self.done_cb:
+            if callable(self.done_cb):
+                self.done_cb()
         self.cmd_exe = None
-        
+        self.done_cb = None
 
 class SortedList(Box):
 
@@ -213,7 +223,14 @@ class SortedList(Box):
         # print("length: " + str(len(self.rows)))
         # print("sort_data: " + str(row[self.sort_column].data["sort_data"]))
 
-        row = self.rows.pop(row_index)
+        row = self.rows.pop(row_index-1)
+
+        for count, item in enumerate(row):
+            self.lists[count].unpack(item)
+            if delete:
+                item.delete()
+            else:
+                item.hide()
 
         self.sort_by_column(self.sort_column,
             ascending=self.sort_column_ascending)
