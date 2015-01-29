@@ -35,7 +35,7 @@ class derp(object):
             row = []
             for j in range(COLUMNS):
                 row.append(random.randint(1, ROWS*COLUMNS))
-            print row
+            #print row
             slist.row_pack(row, sort=False)
         slist.sort_by_column(1)
         slist.show()

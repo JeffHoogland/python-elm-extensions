@@ -4,23 +4,13 @@ from efl.elementary.list import List, ELM_LIST_LIMIT, ELM_LIST_COMPRESS
 from efl.elementary.label import Label
 from efl.elementary.box import Box
 from efl.elementary.button import Button
-from efl.elementary.scroller import Scroller, Scrollable
+from efl.elementary.scroller import Scroller, Scrollable, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON, ELM_SCROLLER_POLICY_AUTO
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 FILL_HORIZ = EVAS_HINT_FILL, 0.5
-
-#
-# TODO ideas:
-# - populate with an idler
-# - custom cb func for sorting
-# - override Table widgets methods
-# - move this over to Cython to increase performance if needed
-# - custom theme
-# - separate title bar?
-#
 
 class SortedList(Box):
 
@@ -56,6 +46,7 @@ class SortedList(Box):
         self.list_box.horizontal = True
         self.list_box.show()
         
+        scr.policy_set(ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON)
         scr.content = self.list_box
         scr.show()
         
@@ -98,8 +89,8 @@ class SortedList(Box):
             self.header_box.pack_end(btn)
             self.header_row.append(btn)
             
-            elm_list = List(self, size_hint_weight=EXPAND_BOTH,  size_hint_align=FILL_BOTH)
-            #print elm_list.policy_get()
+            elm_list = ScrollableList(self, size_hint_weight=EXPAND_BOTH,  size_hint_align=FILL_BOTH)
+            elm_list.policy_set(ELM_SCROLLER_POLICY_AUTO, ELM_SCROLLER_POLICY_OFF)
             elm_list.go()
             elm_list.show()
             self.list_box.pack_end(elm_list)
@@ -204,3 +195,7 @@ class SortedList(Box):
 
     def update(self):
         self.sort_by_column(self.sort_column, self.sort_column_ascending)
+
+class ScrollableList(List, Scrollable):
+    def __init__(self, canvas, *args, **kwargs):
+        List.__init__(self, canvas, *args, **kwargs)
