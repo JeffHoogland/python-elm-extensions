@@ -34,10 +34,24 @@ class derp(object):
         for i in range(ROWS):
             row = []
             for j in range(COLUMNS):
-                row.append(random.randint(1, ROWS*COLUMNS))
-            #print row
+                if j == 0:
+                    btn = Button(slist)
+                    btn.text = "Delete row"
+                    btn.callback_clicked_add(
+                        lambda x, y=row: slist.row_unpack(y, delete=True)
+                        )
+                    btn.show()
+                    row.append(btn)
+                else:
+                    data = random.randint(0, ROWS*COLUMNS)
+                    lb = Label(slist, size_hint_weight=EXPAND_BOTH,
+                                size_hint_align=FILL_BOTH)
+                    lb.text=str(data)
+                    lb.data["sort_data"] = data
+                    lb.show()
+                    row.append(lb)
             slist.row_pack(row, sort=False)
-        slist.sort_by_column(1)
+        #slist.sort_by_column(1)
         slist.show()
         
         win.resize_object_add(slist)

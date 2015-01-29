@@ -1,16 +1,94 @@
 # encoding: utf-8
 
-from efl.elementary.list import List, ELM_LIST_LIMIT, ELM_LIST_COMPRESS
+from efl import ecore
 from efl.elementary.label import Label
 from efl.elementary.box import Box
+from efl.elementary.frame import Frame
 from efl.elementary.button import Button
-from efl.elementary.scroller import Scroller, Scrollable, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON, ELM_SCROLLER_POLICY_AUTO, ELM_SCROLLER_MOVEMENT_BLOCK_VERTICAL
+from efl.elementary.entry import Entry
+from efl.elementary.scroller import Scroller
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 FILL_HORIZ = EVAS_HINT_FILL, 0.5
+ALIGN_CENTER = 0.5, 0.5
+
+class EmbeddedTerminal(Box):
+    def __init__(self, parent_widget, titles=None, *args, **kwargs):
+        Box.__init__(self, parent_widget, *args, **kwargs)
+        
+        self.outPut = Entry(self, size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
+        self.outPut.editable_set(False)
+        self.outPut.scrollable_set(True)
+        self.outPut.show()
+        
+        frame = Frame(self, size_hint_weight=EXPAND_HORIZ, size_hint_align=FILL_HORIZ)
+        frame.text = "Input:"
+        frame.autocollapse_set(True)
+        frame.collapse_go(True)
+        frame.show()
+        
+        bx = Box(self, size_hint_weight=EXPAND_HORIZ, size_hint_align=FILL_HORIZ)
+        bx.horizontal = True
+        bx.show()
+        
+        frame.content = bx
+        
+        self.inPut = Entry(self, size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
+        self.inPut.single_line_set(True)
+        self.inPut.show()
+        
+        enterButton = Button(self)
+        enterButton.text = "Execute"
+        enterButton.callback_pressed_add(self.enterPressed)
+        enterButton.show()
+        
+        bx.pack_end(self.inPut)
+        bx.pack_end(enterButton)
+        
+        self.pack_end(self.outPut)
+        self.pack_end(frame)
+        
+        self.cmd_exe = None
+    
+    def enterPressed(self, btn):
+        if not self.cmd_exe:
+            self.runCommand(self.inPut.text)
+            self.inPut.text = ""
+        else:
+            ourResult = self.cmd_exe.send("%s\n"%self.inPut.text)
+            self.inPut.text = ""
+            
+    def runCommand(self, command):
+        self.cmd_exe = cmd = ecore.Exe(
+            command,
+            ecore.ECORE_EXE_PIPE_READ |
+            ecore.ECORE_EXE_PIPE_ERROR |
+            ecore.ECORE_EXE_PIPE_WRITE
+        )
+        cmd.on_add_event_add(self.command_started)
+        cmd.on_data_event_add(self.received_data)
+        cmd.on_error_event_add(self.received_error)
+        cmd.on_del_event_add(self.command_done)
+    
+    def command_started(self, cmd, event, *args, **kwargs):
+        self.outPut.entry_append("Command started.\n")
+        self.outPut.entry_append("<br>")
+
+    def received_data(self, cmd, event, *args, **kwargs):
+        self.outPut.entry_append("%s"%event.data)
+        self.outPut.entry_append("<br>")
+
+    def received_error(self, cmd, event, *args, **kwargs):
+        self.outPut.entry_append("Error: %s" % event.data)
+
+    def command_done(self, cmd, event, *args, **kwargs):
+        self.outPut.entry_append("Command done.")
+        self.outPut.entry_append("<br>")
+        self.cmd_exe = None
+        
 
 class SortedList(Box):
 
@@ -33,21 +111,19 @@ class SortedList(Box):
 
         self.rows = []
         self.header_row = []
+        
         self.header_box = Box(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ)
         self.header_box.horizontal = True
         self.header_box.show()
         
-        scr = Scroller(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH)
-        
-        self.list_box = Box(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH)
+        self.list_box = Box(self, size_hint_weight=EXPAND_HORIZ,
+                size_hint_align=FILL_HORIZ)
         self.list_box.horizontal = True
         self.list_box.show()
         
-        #scr.policy_set(ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON)
-        scr.content = self.list_box
+        scr = Scroller(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH, content=self.list_box)
         scr.show()
         
         self.lists = []
@@ -81,7 +157,7 @@ class SortedList(Box):
         lastcol = len(titles) - 1
         for count, t in enumerate(titles):
             title, sortable = t
-            btn = Button(self, size_hint_weight=EXPAND_HORIZ,
+            btn = Button(self, size_hint_weight=(1, 0),
                 size_hint_align=FILL_HORIZ, text=title)
             btn.callback_clicked_add(sort_btn_cb, count)
             if not sortable:
@@ -90,27 +166,12 @@ class SortedList(Box):
             self.header_box.pack_end(btn)
             self.header_row.append(btn)
             
-            elm_list = ScrollableList(self, size_hint_weight=EXPAND_BOTH,  size_hint_align=FILL_BOTH)
-            if count < lastcol:
-                elm_list.policy_set(ELM_SCROLLER_POLICY_AUTO, ELM_SCROLLER_POLICY_OFF)
-                elm_list.movement_block = ELM_SCROLLER_MOVEMENT_BLOCK_VERTICAL
-            else:
-                elm_list.callback_edge_top_add(self.scrolling, "top")
-                elm_list.callback_edge_bottom_add(self.scrolling, "bottom")
-                elm_list.callback_scroll_add(self.scrolling, "scrolling")
-                elm_list.callback_scroll_up_add(self.scrolling, "up")
-                elm_list.callback_scroll_down_add(self.scrolling, "down")
-            elm_list.go()
-            elm_list.show()
-            self.list_box.pack_end(elm_list)
-            self.lists.append(elm_list)
+            bx = Box(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH)
+            bx.show()
             
-    def scrolling(self, scroller, the_text):
-        print the_text
-        x, y, w, h = scroller.region_get()
-        lastcol = len(self.lists) - 1
-        for i in range(lastcol):
-            self.lists[i].region_bring_in(x,y,w,h)
+            self.list_box.pack_end(bx)
+            self.lists.append(bx)
 
     def row_pack(self, row, sort=True):
 
@@ -128,12 +189,12 @@ class SortedList(Box):
 
         if sort:
             self.sort_by_column(self.sort_column)
-        else:
-            self.add_row(row)
     
     def add_row(self, row):
+        #print "Test %s"%row
         for count, item in enumerate(row):
-            self.lists[count].item_append(str(item))
+            #Add to boxes
+            self.lists[count].pack_end(item)
 
     def row_unpack(self, row, delete=False):
 
@@ -157,11 +218,12 @@ class SortedList(Box):
             ascending=self.sort_column_ascending)
 
     def reverse(self):
-        self.rows.reverse()
-        for our_list in self.lists:
-            our_list.clear()
-        for row in self.rows:
-            self.add_row(row)
+        rev_order = reversed(range(len(self.rows)))
+        for bx in self.lists:
+            bx.unpack_all()
+        
+        for new_y in rev_order:
+            self.add_row(self.rows[new_y])
 
         lb = self.header_row[self.sort_column].part_content_get("icon")
         if lb is not None:
@@ -171,6 +233,8 @@ class SortedList(Box):
             else:
                 lb.text = u"⬇"
                 self.sort_column_ascending = True
+                
+        self.rows.reverse()
 
     def sort_by_column(self, col, ascending=True):
 
@@ -191,27 +255,31 @@ class SortedList(Box):
              ic.text = u"⬆"
              self.sort_column_ascending = False
 
-    
-        self.rows.sort(
-            key=lambda e: e[col],
-            #reverse=False if ascending else True
-            )
+        orig_col = [
+            (i, x[col].data.get("sort_data", x[col].text)) \
+            for i, x in enumerate(self.rows)
+            ]
+        sorted_col = sorted(orig_col, key=lambda e: e[1])
+        new_order = [x[0] for x in sorted_col]
+
+        # print(new_order)
 
         if not ascending:
-             self.rows.reverse()
+             new_order.reverse()
 
-        #Clear old data
-        for our_list in self.lists:
-            our_list.clear()
+        # print(new_order)
 
-        for row in self.rows:
-            self.add_row(row)
+        for bx in self.lists:
+            bx.unpack_all()
 
+        for new_y in new_order:
+            self.add_row(self.rows[new_y])
+
+        self.rows.sort(
+            key=lambda e: e[col].data.get("sort_data", e[col].text),
+            #reverse=False if ascending else True
+            )
         self.sort_column = col
 
     def update(self):
         self.sort_by_column(self.sort_column, self.sort_column_ascending)
-
-class ScrollableList(List, Scrollable):
-    def __init__(self, canvas, *args, **kwargs):
-        List.__init__(self, canvas, *args, **kwargs)
