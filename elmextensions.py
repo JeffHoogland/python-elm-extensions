@@ -1,9 +1,10 @@
-#Archived for reference
 # encoding: utf-8
 
-from efl.elementary.table import Table, table_pack_get, table_pack_set
+from efl.elementary.list import List, ELM_LIST_LIMIT, ELM_LIST_COMPRESS
 from efl.elementary.label import Label
+from efl.elementary.box import Box
 from efl.elementary.button import Button
+from efl.elementary.scroller import Scroller
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
@@ -21,7 +22,7 @@ FILL_HORIZ = EVAS_HINT_FILL, 0.5
 # - separate title bar?
 #
 
-class SortedList(Table):
+class SortedList(Box):
 
     """
 
@@ -45,6 +46,7 @@ class SortedList(Table):
 
     def __init__(self, parent_widget, titles=None, initial_sort=0,
         ascending=True, *args, **kwargs):
+        Box.__init__(self, parent_widget, *args, **kwargs)
 
         self.header = titles
         self.sort_column = initial_sort
@@ -52,8 +54,27 @@ class SortedList(Table):
 
         self.rows = []
         self.header_row = []
+        self.header_box = Box(self, size_hint_weight=EXPAND_HORIZ,
+                size_hint_align=FILL_HORIZ)
+        self.header_box.horizontal = True
+        self.header_box.show()
+        
+        scr = Scroller(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH)
+        
+        self.list_box = Box(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH)
+        self.list_box.horizontal = True
+        self.list_box.show()
+        
+        scr.content = self.list_box
+        scr.show()
+        
+        self.lists = []
 
-        Table.__init__(self, parent_widget, *args, **kwargs)
+        self.pack_end(self.header_box)
+        self.pack_end(scr)
+        self.show()
 
         if titles is not None:
             self.header_row_pack(titles)
@@ -85,8 +106,15 @@ class SortedList(Table):
             if not sortable:
                 btn.disabled = True
             btn.show()
-            self.pack(btn, count, 0, 1, 1)
+            self.header_box.pack_end(btn)
             self.header_row.append(btn)
+            
+            elm_list = List(self, size_hint_weight=EXPAND_BOTH,  size_hint_align=FILL_BOTH)
+            print elm_list.Scrollable
+            elm_list.go()
+            elm_list.show()
+            self.list_box.pack_end(elm_list)
+            self.lists.append(elm_list)
 
     def row_pack(self, row, sort=True):
 
@@ -99,24 +127,17 @@ class SortedList(Table):
                 )
             )
 
-        for count, col in enumerate(row):
-            self.pack(col, count, len(self.rows)+1, 1, 1)
-
         self.rows.append(row)
+        self.add_row(row)
 
         if sort:
             self.sort_by_column(self.sort_column)
-
-    def row_pack_set(self, y, new_y):
-
-        """Changes the position of a row in the table.
-
-        Doesn't handle sorting automatically.
-
-        """
-
-        for x, item in enumerate(self.rows[new_y]):
-            table_pack_set(item, x, y+1, 1, 1)
+        else:
+            self.add_row(row)
+    
+    def add_row(self, row):
+        for count, item in enumerate(row):
+            self.lists[count].item_append(str(item))
 
     def row_unpack(self, row, delete=False):
 
@@ -128,28 +149,23 @@ class SortedList(Table):
         if isinstance(row, int):
             row_index = row
         else:
-            x, row_index, w, h = table_pack_get(row[0])
+            row_index = self.rows.index(row)
 
         # print("row index: " + str(row_index-1))
         # print("length: " + str(len(self.rows)))
         # print("sort_data: " + str(row[self.sort_column].data["sort_data"]))
 
-        row = self.rows.pop(row_index-1)
-
-        for item in row:
-            self.unpack(item)
-            if delete:
-                item.delete()
-            else:
-                item.hide()
+        row = self.rows.pop(row_index)
 
         self.sort_by_column(self.sort_column,
             ascending=self.sort_column_ascending)
 
     def reverse(self):
-        rev_order = reversed(range(len(self.rows)))
-        for y, new_y in enumerate(rev_order):
-            self.row_pack_set(y, new_y)
+        self.rows.reverse()
+        for our_list in self.lists:
+            our_list.clear()
+        for row in self.rows:
+            self.add_row(row)
 
         lb = self.header_row[self.sort_column].part_content_get("icon")
         if lb is not None:
@@ -159,8 +175,6 @@ class SortedList(Table):
             else:
                 lb.text = u"⬇"
                 self.sort_column_ascending = True
-
-        self.rows.reverse()
 
     def sort_by_column(self, col, ascending=True):
 
@@ -181,28 +195,24 @@ class SortedList(Table):
              ic.text = u"⬆"
              self.sort_column_ascending = False
 
-        orig_col = [
-            (i, x[col].data.get("sort_data", x[col].text)) \
-            for i, x in enumerate(self.rows)
-            ]
-        sorted_col = sorted(orig_col, key=lambda e: e[1])
-        new_order = [x[0] for x in sorted_col]
-
-        # print(new_order)
-
-        if not ascending:
-             new_order.reverse()
-
-        # print(new_order)
-
-        for y, new_y in enumerate(new_order):
-            self.row_pack_set(y, new_y)
-
+    
         self.rows.sort(
-            key=lambda e: e[col].data.get("sort_data", e[col].text),
+            key=lambda e: e[col],
             #reverse=False if ascending else True
             )
+
+        if not ascending:
+             self.rows.reverse()
+
+        #Clear old data
+        for our_list in self.lists:
+            our_list.clear()
+
+        for row in self.rows:
+            self.add_row(row)
+
         self.sort_column = col
 
     def update(self):
         self.sort_by_column(self.sort_column, self.sort_column_ascending)
+
