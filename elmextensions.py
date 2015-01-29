@@ -26,21 +26,10 @@ class SortedList(Box):
 
     """
 
-    A Table that has automatically sorted rows, with user selectable column
-    sort.
+    A "spread sheet like" widget for elementary.
 
     Argument "titles" is a list, with each element being a tuple:
     (<Display Text>, <Sortable>)
-
-    Cell span is assumed to be 1 in both directions.
-
-    Items are Elementary Widgets that can have sort data placed in their data
-    dict:
-
-        item.data["sort_data"] = data
-
-    The data from the widgets is passed to Python sort() function, if sort data
-    is not found the primary text field of the widget is used as fallback.
 
     """
 
