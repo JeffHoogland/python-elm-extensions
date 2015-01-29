@@ -4,7 +4,7 @@ from efl.elementary.list import List, ELM_LIST_LIMIT, ELM_LIST_COMPRESS
 from efl.elementary.label import Label
 from efl.elementary.box import Box
 from efl.elementary.button import Button
-from efl.elementary.scroller import Scroller
+from efl.elementary.scroller import Scroller, Scrollable
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
@@ -99,7 +99,7 @@ class SortedList(Box):
             self.header_row.append(btn)
             
             elm_list = List(self, size_hint_weight=EXPAND_BOTH,  size_hint_align=FILL_BOTH)
-            print elm_list.Scrollable
+            #print elm_list.policy_get()
             elm_list.go()
             elm_list.show()
             self.list_box.pack_end(elm_list)
@@ -204,4 +204,3 @@ class SortedList(Box):
 
     def update(self):
         self.sort_by_column(self.sort_column, self.sort_column_ascending)
-
