@@ -38,6 +38,7 @@ class EmbeddedTerminal(Box):
         
         self.inPut = Entry(self, size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
         self.inPut.single_line_set(True)
+        self.inPut.callback_activated_add(self.enterPressed)
         self.inPut.show()
         
         enterButton = Button(self)
@@ -74,7 +75,7 @@ class EmbeddedTerminal(Box):
         cmd.on_del_event_add(self.command_done)
     
     def command_started(self, cmd, event, *args, **kwargs):
-        self.outPut.entry_append("Command started.\n")
+        self.outPut.entry_append("---------------------------------")
         self.outPut.entry_append("<br>")
 
     def received_data(self, cmd, event, *args, **kwargs):
@@ -85,7 +86,7 @@ class EmbeddedTerminal(Box):
         self.outPut.entry_append("Error: %s" % event.data)
 
     def command_done(self, cmd, event, *args, **kwargs):
-        self.outPut.entry_append("Command done.")
+        self.outPut.entry_append("---------------------------------")
         self.outPut.entry_append("<br>")
         self.cmd_exe = None
         
