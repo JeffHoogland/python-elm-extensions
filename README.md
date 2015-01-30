@@ -10,3 +10,4 @@ Current Objects:
 
 Credits: 
 - [Jeff Hoogland](http://www.jeffhoogland.com/)
+- [Kai Huuhko](https://github.com/kaihu)

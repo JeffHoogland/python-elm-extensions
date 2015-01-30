@@ -7,9 +7,7 @@ from efl.elementary.label import Label
 from efl.elementary.button import Button
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
-#from sortedlist import SortedList
-
-from elmextensions import SortedList
+from sortedlist import SortedList
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
@@ -34,22 +32,8 @@ class derp(object):
         for i in range(ROWS):
             row = []
             for j in range(COLUMNS):
-                if j == 0:
-                    btn = Button(slist)
-                    btn.text = "Delete row"
-                    btn.callback_clicked_add(
-                        lambda x, y=row: slist.row_unpack(y, delete=True)
-                        )
-                    btn.show()
-                    row.append(btn)
-                else:
-                    data = random.randint(0, ROWS*COLUMNS)
-                    lb = Label(slist, size_hint_weight=EXPAND_BOTH,
-                                size_hint_align=FILL_BOTH)
-                    lb.text=str(data)
-                    lb.data["sort_data"] = data
-                    lb.show()
-                    row.append(lb)
+                data = random.randint(0, ROWS*COLUMNS)
+                row.append(data)
             slist.row_pack(row, sort=False)
         #slist.sort_by_column(1)
         slist.show()
