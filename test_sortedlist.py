@@ -17,7 +17,7 @@ EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 
 ROWS = 100
-COLUMNS = 5
+COLUMNS = 7
 
 class derp(object):
     def __init__( self ):
@@ -27,7 +27,7 @@ class derp(object):
         titles = []
         for i in range(COLUMNS):
             titles.append(
-                    ("Column " + str(i), True if i != 2 else False)
+                    ("Column " + str(i), True if i != 2 else False, 1 if i == 1 else 2)
                     )
 
         slist = SortedList(win, titles=titles, size_hint_weight=EXPAND_BOTH,

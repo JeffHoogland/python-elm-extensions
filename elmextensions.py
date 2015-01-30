@@ -3,11 +3,12 @@
 from efl import ecore
 from efl.elementary.label import Label
 from efl.elementary.box import Box
+from efl.elementary.table import Table
 from efl.elementary.frame import Frame
 from efl.elementary.button import Button
 from efl.elementary.entry import Entry
 from efl.elementary.separator import Separator
-from efl.elementary.scroller import Scroller
+from efl.elementary.scroller import Scroller, Scrollable, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON, ELM_SCROLLER_POLICY_AUTO
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
@@ -101,7 +102,7 @@ class EmbeddedTerminal(Box):
             if callable(self.done_cb):
                 self.done_cb()
 
-class SortedList(Box):
+class SortedList(Scroller):
 
     """
 
@@ -114,7 +115,12 @@ class SortedList(Box):
 
     def __init__(self, parent_widget, titles=None, initial_sort=0,
         ascending=True, *args, **kwargs):
-        Box.__init__(self, parent_widget, *args, **kwargs)
+        Scroller.__init__(self, parent_widget, *args, **kwargs)
+        self.policy_set(ELM_SCROLLER_POLICY_AUTO, ELM_SCROLLER_POLICY_OFF)
+
+        self.mainBox = Box(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH)
+        self.mainBox.show()
 
         self.header = titles
         self.sort_column = initial_sort
@@ -123,41 +129,48 @@ class SortedList(Box):
         self.rows = []
         self.header_row = []
         
-        self.header_box = Box(self, size_hint_weight=EXPAND_HORIZ,
+        self.headerTbl = Table(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ)
-        self.header_box.horizontal = True
-        self.header_box.show()
+        self.headerTbl.homogeneous_set(True)
+        self.headerTbl.show()
         
-        self.list_box = Box(self, size_hint_weight=EXPAND_HORIZ,
-                size_hint_align=FILL_HORIZ)
-        self.list_box.horizontal = True
-        self.list_box.show()
+        self.listTbl = Table(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH)
+        self.listTbl.homogeneous_set(True)
+        self.listTbl.show()
         
-        scr = Scroller(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH, content=self.list_box)
-        scr.show()
+        self.mainScr = Scroller(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH)
+        self.mainScr.policy_set(ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_AUTO)
+        self.mainScr.content = self.listTbl
+        self.mainScr.show()
         
         self.lists = []
 
-        self.pack_end(self.header_box)
-        self.pack_end(scr)
-        self.show()
+        #self.pack_end(self.header_box)
 
         if titles is not None:
             self.header_row_pack(titles)
+            
+        self.mainBox.pack_end(self.headerTbl)
+        self.mainBox.pack_end(self.mainScr)
+        
+        self.content = self.mainBox
+        self.show()
 
     def header_row_pack(self, titles):
 
-        """Takes a list (or a tuple) of tuples (string, bool) and packs them to
+        """Takes a list (or a tuple) of tuples (string, bool, int) and packs them to
         the first row of the table."""
 
         assert isinstance(titles, (list, tuple))
         for t in titles:
             assert isinstance(t, tuple)
-            assert len(t) == 2
-            title, sortable = t
+            assert len(t) == 3
+            title, sortable, wdth = t
             assert isinstance(title, basestring)
             assert isinstance(sortable, bool)
+            assert isinstance(wdth, int)
 
         def sort_btn_cb(button, col):
             if self.sort_column == col:
@@ -165,30 +178,26 @@ class SortedList(Box):
             else:
                 self.sort_by_column(col)
 
-        lastcol = len(titles) - 1
+        currentwdth = 0
         for count, t in enumerate(titles):
-            title, sortable = t
-            btn = Button(self, size_hint_weight=(1, 0),
+            title, sortable, wdth = t
+            btn = Button(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ, text=title)
             btn.callback_clicked_add(sort_btn_cb, count)
             if not sortable:
                 btn.disabled = True
             btn.show()
-            self.header_box.pack_end(btn)
+            self.headerTbl.pack(btn, currentwdth, 0, wdth, 1)
             self.header_row.append(btn)
             
             bx = Box(self, size_hint_weight=EXPAND_BOTH,
                 size_hint_align=FILL_BOTH)
             bx.show()
             
-            self.list_box.pack_end(bx)
+            self.listTbl.pack(bx, currentwdth, 0, wdth, 1)
             self.lists.append(bx)
-        
-        sep = Separator(self)
-        sep.show()
-        
-        self.header_box.pack_end(sep)
-        self.header_box.pack_end(sep)
+            
+            currentwdth += wdth
 
 
     def row_pack(self, row, sort=True):
