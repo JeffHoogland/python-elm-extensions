@@ -6,6 +6,7 @@ from efl.elementary.box import Box
 from efl.elementary.frame import Frame
 from efl.elementary.button import Button
 from efl.elementary.entry import Entry
+from efl.elementary.separator import Separator
 from efl.elementary.scroller import Scroller
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
@@ -204,6 +205,7 @@ class SortedList(Box):
         #print "Test %s"%row
         for count, item in enumerate(row):
             #Add to boxes
+            box = Box(self)
             self.lists[count].pack_end(item)
 
     def row_unpack(self, row, delete=False):

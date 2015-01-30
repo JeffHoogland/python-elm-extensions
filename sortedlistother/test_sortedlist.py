@@ -7,7 +7,7 @@ from efl.elementary.label import Label
 from efl.elementary.button import Button
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
-from sortedlist import SortedList
+from sortedgenlist import SortedList
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
