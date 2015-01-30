@@ -183,6 +183,13 @@ class SortedList(Box):
             
             self.list_box.pack_end(bx)
             self.lists.append(bx)
+        
+        sep = Separator(self)
+        sep.show()
+        
+        self.header_box.pack_end(sep)
+        self.header_box.pack_end(sep)
+
 
     def row_pack(self, row, sort=True):
 
@@ -204,8 +211,6 @@ class SortedList(Box):
     def add_row(self, row):
         #print "Test %s"%row
         for count, item in enumerate(row):
-            #Add to boxes
-            box = Box(self)
             self.lists[count].pack_end(item)
 
     def row_unpack(self, row, delete=False):
