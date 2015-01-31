@@ -9,8 +9,6 @@ from efl.elementary.separator import Separator
 from efl.elementary.box import Box
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
-#from sortedlist import SortedList
-
 from elmextensions import SortedList
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
