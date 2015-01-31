@@ -176,47 +176,45 @@ class FileSelector(Box):
     
     def populateFiles(self, ourPath):
         self.fileList.unpack_all()
+        
         if not ourPath:
             ourPath = "/"
         
         data = os.listdir(ourPath)
-        self.filepathEntry.text = ourPath
+        self.filepathEntry.text = ourPath.replace("//", "/")
         
         for d in data:
             if d[0] != ".":
                 row = []
                 
-                box = Box(self, size_hint_weight=EXPAND_BOTH,
-                    size_hint_align=FILL_BOTH)
-                box.horizontal = True
-                box.show()
-                
-                btn = Button(self, size_hint_weight=EXPAND_BOTH,
-                    size_hint_align=FILL_BOTH)
-                btn.text = d
-                btn.show()
-                
                 con = Icon(self, size_hint_weight=(0.25, EVAS_HINT_EXPAND),
                             size_hint_align=FILL_BOTH)
-                if os.path.isdir("%s/%s"%(ourPath, d)):
-                    con.standard_set("gtk-directory")
-                    btn.callback_pressed_add(self.directorySelected, "%s/%s"%(ourPath, d))
-                    box.data["sort_data"] = "1%s"%d
-                else:
-                    con.standard_set("gtk-file")
-                    btn.style="anchor"
-                    btn.callback_pressed_add(self.fileSelected, ourPath, d)
-                    box.data["sort_data"] = "2%s"%d
                 
-                con.show()
-                box.pack_end(con)
-                box.pack_end(btn)
+                btn = Button(self, size_hint_weight=EXPAND_BOTH,
+                    size_hint_align=FILL_BOTH, content=con)
+                btn.text = '%s'%d
+                btn.show()
                 
                 ourSize = os.path.getsize("%s/%s"%(ourPath, d))/1000
                 
                 siz = Label(self, size_hint_weight=EXPAND_BOTH,
                     size_hint_align=FILL_BOTH)
-                siz.text = "%s KB"%ourSize
+                
+                if os.path.isdir("%s/%s"%(ourPath, d)):
+                    con.standard_set("gtk-directory")
+                    btn.callback_pressed_add(self.directorySelected, "%s/%s"%(ourPath, d))
+                    btn.data["sort_data"] = "1%s"%d
+                    ourSize = -1
+                    siz.text = "Folder"
+                else:
+                    con.standard_set("gtk-file")
+                    btn.style="anchor"
+                    btn.callback_pressed_add(self.fileSelected, ourPath, d)
+                    btn.data["sort_data"] = "2%s"%d
+                    siz.text = "%s KB"%ourSize
+                
+                con.show()
+                
                 siz.data["sort_data"] = ourSize
                 siz.show()
                 
@@ -229,7 +227,7 @@ class FileSelector(Box):
                 tm.text = str("")
                 tm.show()'''
                 
-                row.append(box)
+                row.append(btn)
                 row.append(siz)
                 #row.append(tm)
                 
