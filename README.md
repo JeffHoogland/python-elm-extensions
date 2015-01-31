@@ -12,6 +12,10 @@ Current Objects:
 
 ![alt text](http://www.enlightenment.org/ss/e-54cc6a63664aa5.62469556.png "AboutWindow")
 
+- FileSelector (WIP)
+
+![alt text](https://www.enlightenment.org/ss/e-54ccabb9b8fd93.30032006.png "FileSelector")
+
 Credits: 
 - [Jeff Hoogland](http://www.jeffhoogland.com/)
 - [Kai Huuhko](https://github.com/kaihu)
