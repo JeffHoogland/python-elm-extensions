@@ -12,7 +12,7 @@ from elmextensions import EmbeddedTerminal
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 
-class derp(object):
+class MainWindow(object):
     def __init__( self ):
         win = StandardWindow("Testing", "Elementary Embedded Terminal")
         win.callback_delete_request_add(lambda o: elm.exit())
@@ -27,6 +27,6 @@ class derp(object):
         win.show()
 
 if __name__ == "__main__":
-    GUI = derp()
+    GUI = MainWindow()
     elm.run()
     elm.shutdown()
