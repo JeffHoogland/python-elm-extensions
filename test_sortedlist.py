@@ -19,7 +19,7 @@ EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 
 #Defines how large our table generated will be
-ROWS = 100
+ROWS = 50
 COLUMNS = 5
 
 class MainWindow(object):

@@ -160,6 +160,11 @@ class SortedList(Scroller):
 
         self.sort_by_column(self.sort_column,
             ascending=self.sort_column_ascending)
+    
+    def unpack_all(self):
+        tmplist = list(self.rows)
+        for rw in tmplist:
+            self.row_unpack(rw)
 
     def reverse(self):
         rev_order = reversed(range(len(self.rows)))
