@@ -22,12 +22,14 @@ class FileSelector(Box):
     def __init__(self, parent_widget, titles=None, *args, **kwargs):
         Box.__init__(self, parent_widget, *args, **kwargs)
 
+        self.cancelCallback = None
+        self.actionCallback = None
+
         parent_widget.elm_event_callback_add(self.eventsCb)
 
         #Mode should be "save" or "load"
         self.mode = "save"
 
-        self.currentDir = os.path.expanduser("~")
         self.home = os.path.expanduser("~")
         self.root = "/"
 
@@ -120,6 +122,7 @@ class FileSelector(Box):
         self.actionButton = Button(self, size_hint_weight=(0.0, 0.0),
                 size_hint_align=(1.0, 0.5), content=self.actionIcon)
         self.actionButton.text = "Save  "
+        self.actionButton.callback_pressed_add(self.actionButtonPressed)
         self.actionButton.show()
         
         cancelIcon = Icon(self, size_hint_weight=EXPAND_BOTH,
@@ -130,6 +133,7 @@ class FileSelector(Box):
         self.cancelButton = Button(self, size_hint_weight=(0.0, 0.0),
                 size_hint_align=(1.0, 0.5), content=cancelIcon)
         self.cancelButton.text = "Cancel  "
+        self.cancelButton.callback_pressed_add(self.cancelButtonPressed)
         self.cancelButton.show()
         
         self.buttonBox.pack_end(self.cancelButton)
@@ -192,19 +196,20 @@ class FileSelector(Box):
                 btn.text = d
                 btn.show()
                 
-                if os.path.isdir("%s/%s"%(ourPath, d)):
-                    con = Icon(self, size_hint_weight=(0.25, EVAS_HINT_EXPAND),
+                con = Icon(self, size_hint_weight=(0.25, EVAS_HINT_EXPAND),
                             size_hint_align=FILL_BOTH)
+                if os.path.isdir("%s/%s"%(ourPath, d)):
                     con.standard_set("gtk-directory")
-                    con.show()
-                    box.pack_end(con)
                     btn.callback_pressed_add(self.directorySelected, "%s/%s"%(ourPath, d))
                     box.data["sort_data"] = "1%s"%d
                 else:
+                    con.standard_set("gtk-file")
                     btn.style="anchor"
                     btn.callback_pressed_add(self.fileSelected, ourPath, d)
                     box.data["sort_data"] = "2%s"%d
                 
+                con.show()
+                box.pack_end(con)
                 box.pack_end(btn)
                 
                 ourSize = os.path.getsize("%s/%s"%(ourPath, d))/1000
@@ -262,3 +267,17 @@ class FileSelector(Box):
             if event.key.lower() == "l":
                 self.filepathEntry.focus_set(True)
                 self.filepathEntry.cursor_end_set()
+    
+    def callback_cancel_add(self, cb):
+        self.cancelCallback = cb
+    
+    def callback_action_add(self, cb):
+        self.actionCallback = cb
+    
+    def cancelButtonPressed(self, btn):
+        if self.cancelCallback:
+            self.cancelCallback()
+    
+    def actionButtonPressed(self, btn):
+        if self.actionCallback and self.fileEntry.text:
+            self.actionCallback("%s/%s"%(self.filepathEntry.text, self.fileEntry.text))

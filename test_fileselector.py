@@ -21,10 +21,19 @@ class MainWindow(object):
         fs.setMode("Open")
         fs.show()
         
+        fs.callback_action_add(self.showFile)
+        fs.callback_cancel_add(self.qExit)
+        
         win.resize_object_add(fs)
 
         win.resize(600, 400)
         win.show()
+        
+    def qExit(self):
+        elm.exit()
+        
+    def showFile(self, ourFile):
+        print ourFile
 
 if __name__ == "__main__":
     GUI = MainWindow()

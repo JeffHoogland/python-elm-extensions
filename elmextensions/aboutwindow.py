@@ -1,7 +1,7 @@
 from efl.ecore import Exe
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 from efl import elementary
-from efl.elementary.window import StandardWindow, Window, DialogWindow
+from efl.elementary.window import Window, ELM_WIN_DIALOG_BASIC
 from efl.elementary.window import ELM_WIN_DIALOG_BASIC
 from efl.elementary.background import Background
 from efl.elementary.box import Box
@@ -12,17 +12,27 @@ from efl.elementary.separator import Separator
 from efl.elementary.frame import Frame
 from efl.elementary.entry import Entry, ELM_TEXT_FORMAT_PLAIN_UTF8, \
             ELM_WRAP_NONE, ELM_WRAP_MIXED
-from efl.evas import EXPAND_BOTH, EXPAND_HORIZ, EXPAND_VERT, \
-            FILL_BOTH, FILL_HORIZ, FILL_VERT
+from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
+
+EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
+EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
+EXPAND_VERT = 0.0, EVAS_HINT_EXPAND
+FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
+FILL_HORIZ = EVAS_HINT_FILL, 0.5
+FILL_VERT = 0.5, EVAS_HINT_FILL
 
 def xdg_open(url_or_file):
     Exe('xdg-open "%s"' % url_or_file)
 
-class AboutWindow(DialogWindow):
+class AboutWindow(Window):
     def __init__(self, parent, title="About", standardicon="dialog-information", \
                         version="N/A", authors="No One", \
                         licen="GPL", webaddress="", info="Something, something, turtles"):
-        DialogWindow.__init__(self, parent, '%s-info'%title.lower(), title, autodel=True)
+        Window.__init__(self, title, ELM_WIN_DIALOG_BASIC, autodel=True)
+        
+        background = Background(self, size_hint_weight=EXPAND_BOTH)
+        self.resize_object_add(background)
+        background.show()
 
         fr = Frame(self, style='pad_large', size_hint_weight=EXPAND_BOTH,
                    size_hint_align=FILL_BOTH)
