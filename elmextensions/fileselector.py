@@ -22,6 +22,8 @@ class FileSelector(Box):
     def __init__(self, parent_widget, titles=None, *args, **kwargs):
         Box.__init__(self, parent_widget, *args, **kwargs)
 
+        parent_widget.elm_event_callback_add(self.eventsCb)
+
         #Mode should be "save" or "load"
         self.mode = "save"
 
@@ -191,7 +193,7 @@ class FileSelector(Box):
                 btn.show()
                 
                 if os.path.isdir("%s/%s"%(ourPath, d)):
-                    con = Icon(self, size_hint_weight=EXPAND_BOTH,
+                    con = Icon(self, size_hint_weight=(0.25, EVAS_HINT_EXPAND),
                             size_hint_align=FILL_BOTH)
                     con.standard_set("gtk-directory")
                     con.show()
@@ -255,3 +257,8 @@ class FileSelector(Box):
         self.actionButton.text = "%s  "%ourMode
         self.actionIcon.standard_set("document-%s"%ourMode.lower())
         
+    def eventsCb(self, obj, src, event_type, event):
+        if event.modifier_is_set("Control"):
+            if event.key.lower() == "l":
+                self.filepathEntry.focus_set(True)
+                self.filepathEntry.cursor_end_set()
