@@ -474,4 +474,5 @@ class FileSelector(Box):
             self.populateFiles(en.text)
             self.filepathEntry.cursor_end_set()
         else:
-            en.text = self.currentDirectory
+            #en.text = self.currentDirectory
+            pass
