@@ -3,6 +3,7 @@
 from efl.elementary.label import Label
 from efl.elementary.icon import Icon
 from efl.elementary.box import Box
+from efl.elementary.table import Table
 from efl.elementary.frame import Frame
 from efl.elementary.list import List
 from efl.elementary.button import Button
@@ -304,12 +305,13 @@ class FileSelector(Box):
     def packFileFolder(self, ourPath, d, isDir):
         row = []
 
-        con = Icon(self, size_hint_weight=(0.25, EVAS_HINT_EXPAND),
-                    size_hint_align=FILL_BOTH)
+        lbl = Entry(self, size_hint_weight=EXPAND_HORIZ,
+                    size_hint_align=FILL_HORIZ)
+        lbl.show()
 
         btn = Button(self, size_hint_weight=EXPAND_BOTH,
-            size_hint_align=FILL_BOTH, content=con)
-        btn.text = '%s'%d
+            size_hint_align=FILL_BOTH, content=lbl)
+        btn.style="anchor"
         btn.show()
 
         '''ourSize = os.path.getsize("%s%s"%(ourPath, d))/1000
@@ -318,20 +320,16 @@ class FileSelector(Box):
                     size_hint_align=FILL_BOTH)'''
 
         if isDir:
-            con.standard_set("gtk-directory")
+            lbl.text = '<item size=16x16 vsize=full href=file:///usr/share/icons/%s/places/folder.png></item><align="left">   %s'%(os.environ["E_ICON_THEME"], d)
             btn.callback_pressed_add(self.directorySelected, "%s%s"%(ourPath, d))
-            btn.style="anchor"
             btn.data["sort_data"] = "1%s"%d
             #ourSize = -1
             #siz.text = "Folder"
         else:
-            con.standard_set("gtk-file")
-            btn.style="anchor"
+            lbl.text = '<item size=16x16 vsize=full href=file:///usr/share/icons/%s/mimetypes/gtk-file.png></item><align="left">   %s'%(os.environ["E_ICON_THEME"], d)
             btn.callback_pressed_add(self.fileSelected, ourPath, d)
             btn.data["sort_data"] = "2%s"%d
             #siz.text = "%s KB"%ourSize
-
-        con.show()
 
         #siz.data["sort_data"] = ourSize
         #siz.show()
