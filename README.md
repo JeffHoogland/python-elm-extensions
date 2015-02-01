@@ -14,7 +14,7 @@ Current Objects:
 
 - FileSelector
 
-![alt text](http://www.enlightenment.org/ss/e-54cdd4b11fe090.28140731.png "FileSelector")
+![alt text](http://www.enlightenment.org/ss/e-54cea2ff0ef342.81980726.png "FileSelector")
 
 Credits: 
 - [Jeff Hoogland](http://www.jeffhoogland.com/)
