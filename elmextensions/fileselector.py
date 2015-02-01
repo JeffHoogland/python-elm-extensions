@@ -361,6 +361,8 @@ class FileSelector(Box):
             self.addButton.disabled = True
             self.removeButton.disabled = True
             self.populateFiles(item.data["path"]+item.text)
+        else:
+            self.actionButtonPressed(self.actionButton)
 
     def getGTKBookmarks(self):
         try:
@@ -523,3 +525,6 @@ class FileSelector(Box):
         else:
             #en.text = self.currentDirectory
             pass
+    
+    def selected_get(self):
+        return "%s%s"%(self.filepathEntry.text, self.fileEntry.text)
