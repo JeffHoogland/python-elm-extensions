@@ -1,4 +1,4 @@
-A library that contains a few more complex elementary objects for easy importaing/usage.
+A library that contains a few more complex elementary objects for easy importing/usage.
 
 Current Objects:
 - SortedList 
