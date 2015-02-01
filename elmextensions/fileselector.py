@@ -467,6 +467,7 @@ class FileSelector(Box):
     def autocompleteSelected(self, hov, item):
         hov.hover_end()
         self.populateFiles("%s%s"%(self.currentDirectory, item.text))
+        self.filepathEntry.cursor_end_set()
 
     def filepathEditDone(self, en):
         if os.path.isdir(en.text):
