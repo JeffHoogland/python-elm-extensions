@@ -6,7 +6,8 @@ from efl.elementary.box import Box
 from efl.elementary.frame import Frame
 from efl.elementary.list import List
 from efl.elementary.button import Button
-from efl.elementary.entry import Entry
+from efl.elementary.hoversel import Hoversel
+from efl.elementary.entry import Entry, ELM_INPUT_HINT_AUTO_COMPLETE
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 
 from sortedlist import SortedList
@@ -31,6 +32,8 @@ class FileSelector(Box):
 
         self.selectedFolder = None
         self.showHidden = False
+        self.currentDirectory = None
+        self.currentSubFolders = []
         
         #Mode should be "save" or "load"
         self.mode = "save"
@@ -73,6 +76,11 @@ class FileSelector(Box):
                 size_hint_align=FILL_HORIZ)
         self.filepathEntry.single_line_set(True)
         self.filepathEntry.scrollable_set(True)
+        self.filepathEntry.callback_changed_user_add(self.filepathChanged)
+        self.filepathEntry.callback_unfocused_add(self.filepathEditDone)
+        self.filepathEntry.callback_activated_add(self.filepathEditDone)
+        #Wish this worked. Doesn't seem to do anything
+        #self.filepathEntry.input_hint_set(ELM_INPUT_HINT_AUTO_COMPLETE)
         
         if defaultPath and os.path.isdir(defaultPath):
             startPath = defaultPath
@@ -82,6 +90,10 @@ class FileSelector(Box):
         
         self.filepathBox.pack_end(fileLabel)
         self.filepathBox.pack_end(self.filepathEntry)
+        
+        self.autocompleteHover = Hoversel(self, hover_parent=self)
+        self.autocompleteHover.callback_selected_add(self.autocompleteSelected)
+        #self.autocompleteHover.show()
         
         self.fileSelectorBox = Box(self, size_hint_weight=EXPAND_BOTH,
                 size_hint_align=FILL_BOTH)
@@ -151,8 +163,8 @@ class FileSelector(Box):
         self.bookmarkBox.pack_end(self.bookmarkModBox)
         
         #Directory List
-        #, ("Modified", True, 1)
-        headers = (("Name", True, 3), ("Size", True, 1))
+        #, ("Size", True, 1), ("Modified", True, 1)
+        headers = (("Name", True, 3),)
         self.fileList = SortedList(self, headers, 0, size_hint_weight=EXPAND_BOTH,
                 size_hint_align=FILL_BOTH)
         self.fileList.show()
@@ -205,6 +217,7 @@ class FileSelector(Box):
         
         self.pack_end(self.filenameBox)
         self.pack_end(self.filepathBox)
+        self.pack_end(self.autocompleteHover)
         self.pack_end(self.fileSelectorBox)
         self.pack_end(self.buttonBox)
         
@@ -242,31 +255,40 @@ class FileSelector(Box):
             it.data["path"] = bk[7:]
     
     def populateFiles(self, ourPath):
+        self.autocompleteHover.hover_end()
+        
+        if ourPath[:-1] != "/":
+            ourPath = ourPath + "/"
+        
         if ourPath != self.filepathEntry.text or not self.showHidden:
             addingHidden = False
             
             if self.directoryChangeCallback:
                 self.directoryChangeCallback(ourPath)
             
+            self.currentSubFolders = []
             self.fileList.unpack_all()
-            
-            if not ourPath:
-                ourPath = "/"
         else:
             addingHidden = True
             
         data = os.listdir(ourPath)
         self.filepathEntry.text = ourPath.replace("//", "/")
+        self.currentDirectory = ourPath.replace("//", "/")
         
         for d in data:
+            isDir = os.path.isdir("%s%s"%(ourPath, d))
+            
+            if isDir:
+                self.currentSubFolders.append(d)
+            
             if addingHidden and d[0] == ".":
-                self.packFileFolder(ourPath, d)
+                self.packFileFolder(ourPath, d, isDir)
             elif (d[0] != "." or self.showHidden) and not addingHidden:
-                self.packFileFolder(ourPath, d)
+                self.packFileFolder(ourPath, d, isDir)
         
         self.fileList.sort_by_column(0)
                 
-    def packFileFolder(self, ourPath, d):
+    def packFileFolder(self, ourPath, d, isDir):
         row = []
         
         con = Icon(self, size_hint_weight=(0.25, EVAS_HINT_EXPAND),
@@ -277,33 +299,33 @@ class FileSelector(Box):
         btn.text = '%s'%d
         btn.show()
                 
-        ourSize = os.path.getsize("%s/%s"%(ourPath, d))/1000
+        '''ourSize = os.path.getsize("%s%s"%(ourPath, d))/1000
                 
         siz = Label(self, size_hint_weight=EXPAND_BOTH,
-                    size_hint_align=FILL_BOTH)
+                    size_hint_align=FILL_BOTH)'''
                 
-        if os.path.isdir("%s/%s"%(ourPath, d)):
+        if isDir:
             con.standard_set("gtk-directory")
-            btn.callback_pressed_add(self.directorySelected, "%s/%s"%(ourPath, d))
+            btn.callback_pressed_add(self.directorySelected, "%s%s"%(ourPath, d))
             btn.style="anchor"
             btn.data["sort_data"] = "1%s"%d
-            ourSize = -1
-            siz.text = "Folder"
+            #ourSize = -1
+            #siz.text = "Folder"
         else:
             con.standard_set("gtk-file")
             btn.style="anchor"
             btn.callback_pressed_add(self.fileSelected, ourPath, d)
             btn.data["sort_data"] = "2%s"%d
-            siz.text = "%s KB"%ourSize
+            #siz.text = "%s KB"%ourSize
                 
         con.show()
                 
-        siz.data["sort_data"] = ourSize
-        siz.show()
+        #siz.data["sort_data"] = ourSize
+        #siz.show()
         
         '''now = datetime.datetime.now()
     
-                ourTime = os.path.getmtime("%s/%s"%(ourPath, d))
+                ourTime = os.path.getmtime("%s%s"%(ourPath, d))
                 
                 tm = Label(self, size_hint_weight=EXPAND_BOTH,
                     size_hint_align=FILL_BOTH)
@@ -311,7 +333,7 @@ class FileSelector(Box):
         tm.show()'''
         
         row.append(btn)
-        row.append(siz)
+        #row.append(siz)
                 #row.append(tm)
         
         self.fileList.row_pack(row)
@@ -341,7 +363,7 @@ class FileSelector(Box):
             
             currentMarks = self.getGTKBookmarks()
             
-            toAppend = "file://%s/%s"%(self.filepathEntry.text, self.selectedFolder.text)
+            toAppend = "file://%s%s"%(self.filepathEntry.text, self.selectedFolder.text)
             
             if toAppend not in currentMarks:
                 self.addButton.disabled = False
@@ -353,10 +375,11 @@ class FileSelector(Box):
     def upButtonPressed(self, btn):
         ourSplit = self.filepathEntry.text.split("/")
         del ourSplit[-1]
+        del ourSplit[-1]
         self.populateFiles("/".join(ourSplit))
     
     def addButtonPressed(self, btn):
-        toAppend = "file://%s/%s"%(self.filepathEntry.text, self.selectedFolder.text)
+        toAppend = "file://%s%s"%(self.filepathEntry.text, self.selectedFolder.text)
         
         con = Icon(self, size_hint_weight=EXPAND_BOTH,
                     size_hint_align=FILL_BOTH)
@@ -374,7 +397,7 @@ class FileSelector(Box):
                 f.write( toAppend + "\n" )
         
     def removeButtonPressed(self, btn):
-        toRemove = "file://%s/%s"%(self.filepathEntry.text, self.selectedFolder.text)
+        toRemove = "file://%s%s"%(self.filepathEntry.text, self.selectedFolder.text)
         
         bks = self.getGTKBookmarks()
         bks.remove(toRemove)
@@ -397,7 +420,6 @@ class FileSelector(Box):
         
     def eventsCb(self, obj, src, event_type, event):
         if event.modifier_is_set("Control") and event_type == EVAS_CALLBACK_KEY_DOWN:
-            print event_type
             if event.key.lower() == "l":
                 self.filepathEntry.focus_set(True)
                 self.filepathEntry.cursor_end_set()
@@ -421,4 +443,34 @@ class FileSelector(Box):
     
     def actionButtonPressed(self, btn):
         if self.actionCallback and self.fileEntry.text:
-            self.actionCallback(self, "%s/%s"%(self.filepathEntry.text, self.fileEntry.text))
+            self.actionCallback(self, "%s%s"%(self.filepathEntry.text, self.fileEntry.text))
+    
+    def filepathChanged(self, en):
+        typed = en.text.split("/")[-1]
+
+        newList = []
+        
+        for x in self.currentSubFolders:
+            if typed in x:
+                newList.append(x)
+        
+        if self.autocompleteHover.expanded_get():
+            self.autocompleteHover.hover_end()
+        
+        self.autocompleteHover.clear()
+            
+        for x in newList:
+            self.autocompleteHover.item_add(x)
+            
+        self.autocompleteHover.hover_begin()
+    
+    def autocompleteSelected(self, hov, item):
+        hov.hover_end()
+        self.populateFiles("%s%s"%(self.currentDirectory, item.text))
+
+    def filepathEditDone(self, en):
+        if os.path.isdir(en.text):
+            self.populateFiles(en.text)
+            self.filepathEntry.cursor_end_set()
+        else:
+            en.text = self.currentDirectory
