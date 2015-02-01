@@ -19,7 +19,7 @@ FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 FILL_HORIZ = EVAS_HINT_FILL, 0.5
 
 class FileSelector(Box):
-    def __init__(self, parent_widget, defaultPath="", *args, **kwargs):
+    def __init__(self, parent_widget, defaultPath="", defaultPopulate=True, *args, **kwargs):
         Box.__init__(self, parent_widget, *args, **kwargs)
 
         self.cancelCallback = None
@@ -209,7 +209,9 @@ class FileSelector(Box):
         self.pack_end(self.buttonBox)
         
         self.populateBookmarks()
-        self.populateFiles(startPath)
+        
+        if defaultPopulate:
+            self.populateFiles(startPath)
         
     def populateBookmarks(self):
         con = Icon(self, size_hint_weight=EXPAND_BOTH,
