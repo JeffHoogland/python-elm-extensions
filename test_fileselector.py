@@ -21,7 +21,7 @@ class MainWindow(object):
         #fs.setMode("Open")
         fs.show()
         
-        fs.callback_action_add(self.showFile)
+        fs.callback_activated_add(self.showFile)
         fs.callback_cancel_add(self.qExit)
         
         win.resize_object_add(fs)
@@ -29,7 +29,7 @@ class MainWindow(object):
         win.resize(600, 400)
         win.show()
         
-    def qExit(self):
+    def qExit(self, fs):
         elm.exit()
         
     def showFile(self, ourFile):
