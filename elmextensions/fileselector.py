@@ -24,6 +24,7 @@ class FileSelector(Box):
 
         self.cancelCallback = None
         self.actionCallback = None
+        self.directoryChangeCallback = None
 
         #Watch key presses for ctrl+l to select entry
         parent_widget.elm_event_callback_add(self.eventsCb)
@@ -242,6 +243,9 @@ class FileSelector(Box):
         if ourPath != self.filepathEntry.text or not self.showHidden:
             addingHidden = False
             
+            if self.directoryChangeCallback:
+                self.directoryChangeCallback(ourPath)
+            
             self.fileList.unpack_all()
             
             if not ourPath:
@@ -403,13 +407,16 @@ class FileSelector(Box):
     def callback_cancel_add(self, cb):
         self.cancelCallback = cb
     
-    def callback_action_add(self, cb):
+    def callback_activated_add(self, cb):
         self.actionCallback = cb
+    
+    def callback_directory_open_add(self, cb):
+        self.directoryChangeCallback = cb
     
     def cancelButtonPressed(self, btn):
         if self.cancelCallback:
-            self.cancelCallback()
+            self.cancelCallback(self)
     
     def actionButtonPressed(self, btn):
         if self.actionCallback and self.fileEntry.text:
-            self.actionCallback("%s/%s"%(self.filepathEntry.text, self.fileEntry.text))
+            self.actionCallback(self, "%s/%s"%(self.filepathEntry.text, self.fileEntry.text))
