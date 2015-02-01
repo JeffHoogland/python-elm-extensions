@@ -7,6 +7,7 @@ from efl.elementary.frame import Frame
 from efl.elementary.list import List
 from efl.elementary.button import Button
 from efl.elementary.hoversel import Hoversel
+from efl.elementary.separator import Separator
 from efl.elementary.entry import Entry, ELM_INPUT_HINT_AUTO_COMPLETE
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 
@@ -33,7 +34,9 @@ class FileSelector(Box):
         self.selectedFolder = None
         self.showHidden = False
         self.currentDirectory = None
+        self.focusedEntry = None
         self.currentSubFolders = []
+        self.currentFiles = []
         
         #Mode should be "save" or "load"
         self.mode = "save"
@@ -56,10 +59,16 @@ class FileSelector(Box):
                 size_hint_align=FILL_HORIZ)
         self.fileEntry.single_line_set(True)
         self.fileEntry.scrollable_set(True)
+        self.fileEntry.callback_changed_user_add(self.fileEntryChanged)
         self.fileEntry.show()
         
         self.filenameBox.pack_end(fileLabel)
         self.filenameBox.pack_end(self.fileEntry)
+        
+        sep = Separator(self, size_hint_weight=EXPAND_HORIZ,
+                size_hint_align=FILL_HORIZ)
+        sep.horizontal_set(True)
+        sep.show()
         
         #Label+Entry for File Path
         self.filepathBox = Box(self, size_hint_weight=EXPAND_HORIZ,
@@ -76,7 +85,7 @@ class FileSelector(Box):
                 size_hint_align=FILL_HORIZ)
         self.filepathEntry.single_line_set(True)
         self.filepathEntry.scrollable_set(True)
-        self.filepathEntry.callback_changed_user_add(self.filepathChanged)
+        self.filepathEntry.callback_changed_user_add(self.fileEntryChanged)
         self.filepathEntry.callback_unfocused_add(self.filepathEditDone)
         self.filepathEntry.callback_activated_add(self.filepathEditDone)
         #Wish this worked. Doesn't seem to do anything
@@ -216,6 +225,7 @@ class FileSelector(Box):
         self.buttonBox.pack_end(self.actionButton)
         
         self.pack_end(self.filenameBox)
+        self.pack_end(sep)
         self.pack_end(self.filepathBox)
         self.pack_end(self.autocompleteHover)
         self.pack_end(self.fileSelectorBox)
@@ -267,6 +277,7 @@ class FileSelector(Box):
                 self.directoryChangeCallback(ourPath)
             
             self.currentSubFolders = []
+            self.currentFiles = []
             self.fileList.unpack_all()
         else:
             addingHidden = True
@@ -280,6 +291,8 @@ class FileSelector(Box):
             
             if isDir:
                 self.currentSubFolders.append(d)
+            else:
+                self.currentFiles.append(d)
             
             if addingHidden and d[0] == ".":
                 self.packFileFolder(ourPath, d, isDir)
@@ -445,14 +458,21 @@ class FileSelector(Box):
         if self.actionCallback and self.fileEntry.text:
             self.actionCallback(self, "%s%s"%(self.filepathEntry.text, self.fileEntry.text))
     
-    def filepathChanged(self, en):
+    def fileEntryChanged(self, en):
         typed = en.text.split("/")[-1]
 
         newList = []
         
-        for x in self.currentSubFolders:
-            if typed in x:
-                newList.append(x)
+        self.focusedEntry = en
+        
+        if en == self.filepathEntry:
+            for x in self.currentSubFolders:
+                if typed in x:
+                    newList.append(x)
+        else:
+            for x in self.currentFiles:
+                if typed in x:
+                    newList.append(x)
         
         if self.autocompleteHover.expanded_get():
             self.autocompleteHover.hover_end()
@@ -466,8 +486,12 @@ class FileSelector(Box):
     
     def autocompleteSelected(self, hov, item):
         hov.hover_end()
-        self.populateFiles("%s%s"%(self.currentDirectory, item.text))
-        self.filepathEntry.cursor_end_set()
+        if self.focusedEntry == self.filepathEntry:
+            self.populateFiles("%s%s"%(self.currentDirectory, item.text))
+            self.filepathEntry.cursor_end_set()
+        else:
+            self.fileEntry.text = item.text
+            self.fileEntry.cursor_end_set()
 
     def filepathEditDone(self, en):
         if os.path.isdir(en.text):
