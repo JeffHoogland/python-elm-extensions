@@ -18,7 +18,7 @@ class MainWindow(object):
         win.callback_delete_request_add(lambda o: elm.exit())
 
         fs = FileSelector(win, size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
-        fs.setMode("Open")
+        #fs.setMode("Open")
         fs.show()
         
         fs.callback_action_add(self.showFile)
