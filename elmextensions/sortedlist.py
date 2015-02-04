@@ -170,7 +170,7 @@ class SortedList(Scroller):
             self.row_unpack(rw)
 
     def reverse(self):
-        rev_order = reversed(range(len(self.rows)))
+        rev_order = reversed(list(range(len(self.rows))))
         for bx in self.lists:
             bx.unpack_all()
         
