@@ -33,7 +33,7 @@ class MainWindow(object):
         elm.exit()
         
     def showFile(self, ourFile):
-        print ourFile
+        print(ourFile)
 
 if __name__ == "__main__":
     GUI = MainWindow()

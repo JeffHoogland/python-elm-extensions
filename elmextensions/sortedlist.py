@@ -79,7 +79,10 @@ class SortedList(Scroller):
             assert isinstance(t, tuple)
             assert len(t) == 3
             title, sortable, wdth = t
-            assert isinstance(title, basestring)
+            try:
+                assert isinstance(title, basestring)
+            except:
+                assert isinstance(title, str)
             assert isinstance(sortable, bool)
             assert isinstance(wdth, int)
 
@@ -129,7 +132,7 @@ class SortedList(Scroller):
             self.sort_by_column(self.sort_column)
     
     def add_row(self, row):
-        #print "Test %s"%row
+        #print("Test %s"%row)
         for count, item in enumerate(row):
             self.lists[count].pack_end(item)
 
@@ -167,7 +170,7 @@ class SortedList(Scroller):
             self.row_unpack(rw)
 
     def reverse(self):
-        rev_order = reversed(range(len(self.rows)))
+        rev_order = reversed(list(range(len(self.rows))))
         for bx in self.lists:
             bx.unpack_all()
         
