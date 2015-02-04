@@ -129,7 +129,7 @@ class SortedList(Scroller):
             self.sort_by_column(self.sort_column)
     
     def add_row(self, row):
-        #print "Test %s"%row
+        #print("Test %s"%row)
         for count, item in enumerate(row):
             self.lists[count].pack_end(item)
 
