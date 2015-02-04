@@ -32,7 +32,7 @@ class MainWindow(object):
     def qExit(self, fs):
         elm.exit()
         
-    def showFile(self, ourFile):
+    def showFile(self, fs, ourFile):
         print(ourFile)
 
 if __name__ == "__main__":
