@@ -79,7 +79,10 @@ class SortedList(Scroller):
             assert isinstance(t, tuple)
             assert len(t) == 3
             title, sortable, wdth = t
-            assert isinstance(title, basestring)
+            try:
+                assert isinstance(title, basestring)
+            except:
+                assert isinstance(title, str)
             assert isinstance(sortable, bool)
             assert isinstance(wdth, int)
 

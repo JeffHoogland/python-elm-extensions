@@ -71,7 +71,10 @@ class SortedList(Box):
             assert isinstance(t, tuple)
             assert len(t) == 2
             title, sortable = t
-            assert isinstance(title, basestring)
+            try:
+                assert isinstance(title, basestring)
+            except:
+                assert isinstance(title, str)
             assert isinstance(sortable, bool)
 
         def sort_btn_cb(button, col):
