@@ -465,6 +465,10 @@ class FileSelector(Box):
     def toggleHiddenButtonPressed(self, btn):
         self.showHidden = not self.showHidden
         self.populateFiles(self.filepathEntry.text)
+        
+    def toggleHidden(self):
+        self.showHidden = not self.showHidden
+        self.populateFiles(self.filepathEntry.text)
 
     def callback_cancel_add(self, cb):
         self.cancelCallback = cb
