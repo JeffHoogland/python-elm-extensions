@@ -17,6 +17,7 @@ class EmbeddedTerminal(Box):
         self.outPut = Entry(self, size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
         self.outPut.editable_set(False)
         self.outPut.scrollable_set(True)
+        self.outPut.callback_changed_add(self.changedCb)
         self.outPut.show()
         
         frame = Frame(self, size_hint_weight=EXPAND_HORIZ, size_hint_align=FILL_HORIZ)
@@ -49,6 +50,9 @@ class EmbeddedTerminal(Box):
         
         self.cmd_exe = None
         self.done_cb = None
+    
+    def changedCb(self, obj):
+        obj.cursor_end_set()
     
     def enterPressed(self, btn):
         if not self.cmd_exe:
