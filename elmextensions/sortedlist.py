@@ -4,9 +4,9 @@ from efl.elementary.label import Label
 from efl.elementary.box import Box
 from efl.elementary.table import Table
 from efl.elementary.button import Button
-from efl.elementary.entry import Entry
+from efl.elementary.genlist import Genlist, GenlistItemClass
 from efl.elementary.scroller import Scroller, Scrollable, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON, ELM_SCROLLER_POLICY_AUTO
-from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
+from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_ASPECT_CONTROL_VERTICAL
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
@@ -20,7 +20,7 @@ class SortedList(Scroller):
     A "spread sheet like" widget for elementary.
 
     Argument "titles" is a list, with each element being a tuple:
-    (<Display Text>, <Sortable>)
+    (<Display Text>, <Sortable>, <Width>)
 
     """
 
@@ -39,22 +39,15 @@ class SortedList(Scroller):
 
         self.rows = []
         self.header_row = []
+        self.header_widths = []
         
         self.headerTbl = Table(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ)
         self.headerTbl.homogeneous_set(True)
         self.headerTbl.show()
         
-        self.listTbl = Table(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH)
-        self.listTbl.homogeneous_set(True)
-        self.listTbl.show()
-        
-        self.mainScr = Scroller(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH)
-        self.mainScr.policy_set(ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_AUTO)
-        self.mainScr.content = self.listTbl
-        self.mainScr.show()
+        self.genList = Genlist(self, size_hint_weight=EXPAND_BOTH,  size_hint_align=FILL_BOTH)
+        self.genList.show()
         
         self.lists = []
 
@@ -64,7 +57,7 @@ class SortedList(Scroller):
             self.header_row_pack(titles)
             
         self.mainBox.pack_end(self.headerTbl)
-        self.mainBox.pack_end(self.mainScr)
+        self.mainBox.pack_end(self.genList)
         
         self.content = self.mainBox
         self.show()
@@ -103,16 +96,9 @@ class SortedList(Scroller):
             btn.show()
             self.headerTbl.pack(btn, currentwdth, 0, wdth, 1)
             self.header_row.append(btn)
-            
-            bx = Box(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH)
-            bx.show()
-            
-            self.listTbl.pack(bx, currentwdth, 0, wdth, 1)
-            self.lists.append(bx)
+            self.header_widths.append(wdth)
             
             currentwdth += wdth
-
 
     def row_pack(self, row, sort=True):
 
@@ -132,9 +118,41 @@ class SortedList(Scroller):
             self.sort_by_column(self.sort_column)
     
     def add_row(self, row):
-        #print("Test %s"%row)
-        for count, item in enumerate(row):
-            self.lists[count].pack_end(item)
+        def gl_text_get(obj, part, item_data):
+            return item_data
+
+        def gl_content_get(obj, part, item_data):
+            rowTbl = Table(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH, size_hint_aspect=(EVAS_ASPECT_CONTROL_VERTICAL, 1, 1))
+            rowTbl.homogeneous_set(True)
+            
+            currentwdth = 0
+            for count, item in enumerate(item_data):
+                rowTbl.pack(item, currentwdth, 0, self.header_widths[count], 1)
+                
+                currentwdth += self.header_widths[count]
+            
+            #rowTbl.show()
+            
+            return rowTbl
+                
+        def gl_state_get(obj, part, item_data):
+            return False
+            
+        def gl_item_sel(gli, gl, *args, **kwargs):
+            print("\n---GenlistItem selected---")
+            print(gli)
+            print(gl)
+            print(args)
+            print(kwargs)
+            print(("item_data: %s" % gli.data_get()))
+            
+        itc = GenlistItemClass(item_style="full",
+                            text_get_func=gl_text_get,
+                            content_get_func=gl_content_get,
+                            state_get_func=gl_state_get)
+                            
+        self.genList.item_append(itc, row, func=gl_item_sel)
 
     def row_unpack(self, row, delete=False):
 
