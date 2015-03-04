@@ -9,6 +9,7 @@ from efl.elementary.list import List, ListItem
 from efl.elementary.button import Button
 from efl.elementary.hoversel import Hoversel
 from efl.elementary.separator import Separator
+from efl.elementary.panes import Panes
 from efl.elementary.entry import Entry, ELM_INPUT_HINT_AUTO_COMPLETE
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 
@@ -104,9 +105,8 @@ class FileSelector(Box):
         self.autocompleteHover.callback_selected_add(self.autocompleteSelected)
         #self.autocompleteHover.show()
 
-        self.fileSelectorBox = Box(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH)
-        self.fileSelectorBox.horizontal = True
+        self.fileSelectorBox = Panes(self, content_left_size=0.3,
+                      size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
         self.fileSelectorBox.show()
 
         """Bookmarks Box contains:
@@ -190,8 +190,8 @@ class FileSelector(Box):
         self.fileListBox.pack_end(self.fileSortButton)
         self.fileListBox.pack_end(self.fileList)
 
-        self.fileSelectorBox.pack_end(self.bookmarkBox)
-        self.fileSelectorBox.pack_end(self.fileListBox)
+        self.fileSelectorBox.part_content_set("left", self.bookmarkBox)
+        self.fileSelectorBox.part_content_set("right", self.fileListBox)
 
         #Cancel and Save/Open button
         self.buttonBox = Box(self, size_hint_weight=EXPAND_HORIZ,
