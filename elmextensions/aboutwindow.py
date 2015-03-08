@@ -49,7 +49,8 @@ class AboutWindow(Window):
         vbox.show()
 
         # icon + version
-        ic = Icon(self, standard=standardicon, size_hint_min=(64,64))
+        ic = Icon(self, size_hint_min=(64,64))
+        ic.standard_set(standardicon)
         vbox.pack_end(ic)
         ic.show()
 
