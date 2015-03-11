@@ -29,7 +29,7 @@ class MainWindow(object):
 
         """Build the titles for the table. The titles is a list of tuples with the following format:
         
-        ( <String - Header Text>, <Bool - Sortable>, <Int - Column Width>)"""
+        ( <String - Header Text>, <Bool - Sortable> )"""
         titles = []
         for i in range(COLUMNS):
             titles.append(
