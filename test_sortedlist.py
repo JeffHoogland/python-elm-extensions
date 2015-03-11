@@ -33,7 +33,7 @@ class MainWindow(object):
         titles = []
         for i in range(COLUMNS):
             titles.append(
-                    ("Column " + str(i), True if i != 2 else False, 1 if i == 1 else 2)
+                    ("Column " + str(i), True if i != 2 else False)
                     )
 
         #Create our sorted list object

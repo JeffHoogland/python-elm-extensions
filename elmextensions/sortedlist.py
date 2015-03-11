@@ -2,7 +2,8 @@
 
 from efl.elementary.label import Label
 from efl.elementary.box import Box
-from efl.elementary.table import Table
+#from efl.elementary.table import Table
+from efl.elementary.panes import Panes
 from efl.elementary.button import Button
 from efl.elementary.scroller import Scroller, Scrollable, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_ON, ELM_SCROLLER_POLICY_AUTO
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
@@ -36,22 +37,30 @@ class SortedList(Scroller):
         self.rows = []
         self.header_row = []
         
-        self.headerTbl = Table(self, size_hint_weight=EXPAND_HORIZ,
+        headerPane = Panes(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ)
-        self.headerTbl.homogeneous_set(True)
-        self.headerTbl.show()
+        headerPane.callback_unpress_add(self.paneResized)
+        headerPane.show()
         
-        self.listTbl = Table(self, size_hint_weight=EXPAND_BOTH,
+        listPane = Panes(self, size_hint_weight=EXPAND_BOTH,
                 size_hint_align=FILL_BOTH)
-        self.listTbl.homogeneous_set(True)
-        self.listTbl.show()
+        listPane.callback_unpress_add(self.paneResized)
+        listPane.style_set("flush")
+        listPane.show()
+        
+        headerPane.data["related"] = listPane
+        listPane.data["related"] = headerPane
         
         self.mainScr = Scroller(self, size_hint_weight=EXPAND_BOTH,
                 size_hint_align=FILL_BOTH)
         self.mainScr.policy_set(ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_AUTO)
-        self.mainScr.content = self.listTbl
+        self.mainScr.content = listPane
         self.mainScr.show()
         
+        self.headerPanes  = []
+        self.headerPanes.append(headerPane)
+        self.listPanes = []
+        self.listPanes.append(listPane)
         self.lists = []
 
         #self.pack_end(self.header_box)
@@ -59,7 +68,7 @@ class SortedList(Scroller):
         if titles is not None:
             self.header_row_pack(titles)
             
-        self.mainBox.pack_end(self.headerTbl)
+        self.mainBox.pack_end(headerPane)
         self.mainBox.pack_end(self.mainScr)
         
         self.content = self.mainBox
@@ -73,14 +82,13 @@ class SortedList(Scroller):
         assert isinstance(titles, (list, tuple))
         for t in titles:
             assert isinstance(t, tuple)
-            assert len(t) == 3
-            title, sortable, wdth = t
+            assert len(t) == 2
+            title, sortable = t
             try:
                 assert isinstance(title, basestring)
             except:
                 assert isinstance(title, str)
             assert isinstance(sortable, bool)
-            assert isinstance(wdth, int)
 
         def sort_btn_cb(button, col):
             if self.sort_column == col:
@@ -88,27 +96,61 @@ class SortedList(Scroller):
             else:
                 self.sort_by_column(col)
 
-        currentwdth = 0
+        titleCount = len(titles)
         for count, t in enumerate(titles):
-            title, sortable, wdth = t
+            title, sortable = t
             btn = Button(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ, text=title)
             btn.callback_clicked_add(sort_btn_cb, count)
             if not sortable:
                 btn.disabled = True
             btn.show()
-            self.headerTbl.pack(btn, currentwdth, 0, wdth, 1)
             self.header_row.append(btn)
             
             bx = Box(self, size_hint_weight=EXPAND_BOTH,
                 size_hint_align=FILL_BOTH)
             bx.show()
             
-            self.listTbl.pack(bx, currentwdth, 0, wdth, 1)
-            self.lists.append(bx)
+            if len(self.listPanes) < titleCount:
+                wdth = 1.0 / (titleCount - count)
+                self.listPanes[count].part_content_set("left", bx)
+                self.listPanes[count].content_left_size = wdth
+                
+                nextList = Panes(self, size_hint_weight=EXPAND_BOTH,
+                        size_hint_align=FILL_BOTH)
+                nextList.callback_unpress_add(self.paneResized)
+                nextList.style_set("flush")
+                nextList.show()
+                
+                self.listPanes[count].part_content_set("right", nextList)
+                self.listPanes.append(nextList)
+                
+                self.headerPanes[count].part_content_set("left", btn)
+                self.headerPanes[count].content_left_size = wdth
+                
+                nextHeader = Panes(self, size_hint_weight=EXPAND_HORIZ,
+                        size_hint_align=FILL_HORIZ)
+                nextHeader.callback_unpress_add(self.paneResized)
+                nextHeader.show()
+                
+                self.headerPanes[count].part_content_set("right", nextHeader)
+                self.headerPanes.append(nextHeader)
+                
+                nextList.data["related"] = nextHeader
+                nextHeader.data["related"] = nextList
+            else:
+                self.listPanes[count - 1].part_content_set("right", bx)
+                self.headerPanes[count - 1].part_content_set("right", btn)
             
-            currentwdth += wdth
+            self.lists.append(bx)
 
+    def paneResized(self, obj):
+        leftSize = obj.content_left_size
+        rightSize = obj.content_right_size
+        related = obj.data["related"]
+        
+        related.content_left_size = leftSize
+        related.content_right_size = rightSize
 
     def row_pack(self, row, sort=True):
 
