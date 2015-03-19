@@ -12,8 +12,10 @@ from efl.elementary.separator import Separator
 from efl.elementary.panes import Panes
 from efl.elementary.entry import Entry, ELM_INPUT_HINT_AUTO_COMPLETE
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
+from efl import ecore
 
 import os
+from easythreading import ThreadedFunction
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
@@ -27,6 +29,9 @@ class FileSelector(Box):
         self.cancelCallback = None
         self.actionCallback = None
         self.directoryChangeCallback = None
+        
+        self.threadedFunction = ThreadedFunction()
+        self._timer = ecore.Timer(0.01, self.populateFile)
 
         #Watch key presses for ctrl+l to select entry
         parent_widget.elm_event_callback_add(self.eventsCb)
@@ -36,6 +41,8 @@ class FileSelector(Box):
         self.currentDirectory = None
         self.focusedEntry = None
         self.sortReverse = False
+        self.addingHidden = False
+        self.pendingFiles = []
         self.currentSubFolders = []
         self.currentFiles = []
 
@@ -248,6 +255,9 @@ class FileSelector(Box):
         if defaultPopulate:
             self.populateFiles(startPath)
 
+    def shutdown(self):
+        self.threadedFunction.shutdown()
+
     def sortData(self, btn):
         self.sortReverse = not self.sortReverse
         
@@ -286,14 +296,25 @@ class FileSelector(Box):
             it = self.bookmarksList.item_append(bk.split("/")[-1], icon=con)
             it.data["path"] = bk[7:]
 
+    def populateFile(self):
+        if len(self.pendingFiles):
+            ourPath, d, isDir = self.pendingFiles.pop(0)
+            self.packFileFolder(ourPath, d, isDir)
+        #else:
+        #    self._timer.freeze()
+        
+        return True
+
     def populateFiles(self, ourPath):
         self.autocompleteHover.hover_end()
+
+        del self.pendingFiles[:]
 
         if ourPath[:-1] != "/":
             ourPath = ourPath + "/"
 
         if ourPath != self.filepathEntry.text or not self.showHidden:
-            addingHidden = False
+            self.addingHidden = False
 
             if self.directoryChangeCallback:
                 self.directoryChangeCallback(ourPath)
@@ -302,12 +323,19 @@ class FileSelector(Box):
             self.currentFiles = []
             self.fileList.clear()
         else:
-            addingHidden = True
+            self.addingHidden = True
 
-        data = os.listdir(ourPath)
         self.filepathEntry.text = ourPath.replace("//", "/")
         self.currentDirectory = ourPath.replace("//", "/")
-
+    
+        self.threadedFunction.run(self.getFolderContents)
+        #self._timer.thaw()
+    
+    def getFolderContents(self):
+        ourPath = self.currentDirectory
+        
+        data = os.listdir(ourPath)
+        
         sortedData = []
 
         for d in data:
@@ -331,12 +359,10 @@ class FileSelector(Box):
         for ourFile in sortedData:
             d = ourFile[1]
             isDir = ourFile[0] if self.sortReverse else not ourFile[0]
-            if addingHidden and d[0] == ".":
-                self.packFileFolder(ourPath, d, isDir)
-            elif (d[0] != "." or self.showHidden) and not addingHidden:
-                self.packFileFolder(ourPath, d, isDir)
-
-        self.fileList.go()
+            if self.addingHidden and d[0] == ".":
+                self.pendingFiles.append([ourPath, d, isDir])
+            elif (d[0] != "." or self.showHidden) and not self.addingHidden:
+                self.pendingFiles.append([ourPath, d, isDir])
 
     def packFileFolder(self, ourPath, d, isDir):
         con = Icon(self, size_hint_weight=EXPAND_HORIZ,
@@ -355,6 +381,8 @@ class FileSelector(Box):
         li.data["path"] = ourPath
 
         li.append_to(self.fileList)
+        self.fileList.go()
+        #print("Adding: %s %s %s"%(ourPath, d, isDir))
 
     def fileDoubleClicked(self, obj, item=None, eventData=None):
         if item.data["type"] == "dir":
@@ -366,11 +394,16 @@ class FileSelector(Box):
 
     def getGTKBookmarks(self):
         try:
-            with open(os.path.expanduser('~/.gtk-bookmarks'),'r') as f:
-                return [ x.strip() for x in f ]
+            with open(os.path.expanduser('~/.config/gtk-3.0/bookmarks'),'r') as f:
+                ourBks = []
+                for x in f:
+                    x = x.split(" ")[0]
+                    x = x.replace("%20", " ")
+                    x = x.strip()
+                    ourBks.append(x)
+                return ourBks
         except IOError:
             return []
-
 
     def bookmarkDoubleClicked(self, obj, item=None, eventData=None):
         item.selected_set(False)
@@ -417,7 +450,7 @@ class FileSelector(Box):
         self.populateFiles("/".join(ourSplit))
 
     def addButtonPressed(self, btn):
-        toAppend = "file://%s%s"%(self.filepathEntry.text, self.selectedFolder.text)
+        toAppend = "file://%s%s"%(self.filepathEntry.text, self.selectedFolder.text.replace(" ", "%20"))
 
         con = Icon(self, size_hint_weight=EXPAND_BOTH,
                     size_hint_align=FILL_BOTH)
@@ -431,8 +464,8 @@ class FileSelector(Box):
         self.addButton.disabled = True
         self.removeButton.disabled = False
 
-        with open(os.path.expanduser('~/.gtk-bookmarks'),'a') as f:
-                f.write( toAppend + "\n" )
+        with open(os.path.expanduser('~/.config/gtk-3.0/bookmarks'),'a') as f:
+                f.write( toAppend + " " + self.selectedFolder.text + "\n" )
 
     def removeButtonPressed(self, btn):
         toRemove = "file://%s%s"%(self.filepathEntry.text, self.selectedFolder.text)
@@ -440,9 +473,11 @@ class FileSelector(Box):
         bks = self.getGTKBookmarks()
         bks.remove(toRemove)
 
-        with open(os.path.expanduser('~/.gtk-bookmarks'),'w') as f:
-                for b in bks:
-                        f.write( b + "\n" )
+        with open(os.path.expanduser('~/.config/gtk-3.0/bookmarks'),'w') as f:
+            for b in bks:
+                bName = b.split("/")[-1]
+                b = b.replace(" ", "%20")
+                f.write( b + " " + bName + "\n" )
 
         self.bookmarksList.clear()
         self.populateBookmarks()
@@ -497,11 +532,17 @@ class FileSelector(Box):
         if en == self.filepathEntry:
             for x in self.currentSubFolders:
                 if typed in x:
-                    newList.append(x)
+                    if len(newList) < 10:
+                        newList.append(x)
+                    else:
+                        break
         else:
             for x in self.currentFiles:
                 if typed in x:
-                    newList.append(x)
+                    if len(newList) < 10:
+                        newList.append(x)
+                    else:
+                        break
 
         if self.autocompleteHover.expanded_get():
             self.autocompleteHover.hover_end()
