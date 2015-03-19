@@ -15,7 +15,7 @@ from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 from efl import ecore
 
 import os
-from easythreading import ThreadedFunction
+from .easythreading import ThreadedFunction
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
