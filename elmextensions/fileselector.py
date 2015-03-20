@@ -10,6 +10,7 @@ from efl.elementary.button import Button
 from efl.elementary.hoversel import Hoversel
 from efl.elementary.separator import Separator
 from efl.elementary.panes import Panes
+from efl.elementary.innerwindow import InnerWindow
 from efl.elementary.entry import Entry, ELM_INPUT_HINT_AUTO_COMPLETE
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 from efl import ecore
@@ -272,7 +273,19 @@ class FileSelector(Box):
         self.toggleHiddenButton.text = "Toggle Hidden  "
         self.toggleHiddenButton.callback_pressed_add(self.toggleHiddenButtonPressed)
         self.toggleHiddenButton.show()
+        
+        con = Icon(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH)
+        con.standard_set("folder-new")
+        con.show()
+        
+        self.createFolderButton = Button(self, size_hint_weight=(0.0, 0.0),
+                size_hint_align=(1.0, 0.5), content=con)
+        self.createFolderButton.text = "Create Folder  "
+        self.createFolderButton.callback_pressed_add(self.createFolderButtonPressed)
+        self.createFolderButton.show()
 
+        self.buttonBox.pack_end(self.createFolderButton)
         self.buttonBox.pack_end(self.toggleHiddenButton)
         self.buttonBox.pack_end(self.cancelButton)
         self.buttonBox.pack_end(self.actionButton)
@@ -285,9 +298,61 @@ class FileSelector(Box):
         self.pack_end(self.buttonBox)
 
         self.populateBookmarks()
+        
+        self.createPopup = InnerWindow(parent_widget)
+        
+        bx = Box(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH)
+        bx.show()
+        
+        self.createPopup.content = bx
+
+        lbl = Label(self)
+        lbl.text = "<b>Create Folder:</b>"
+        lbl.show()
+
+        self.createEn = en = Entry(self, size_hint_weight=EXPAND_HORIZ,
+                size_hint_align=FILL_HORIZ)
+        en.single_line_set(True)
+        en.scrollable_set(True)
+        en.show()
+
+        buttonbx = Box(self, size_hint_weight=EXPAND_HORIZ,
+                size_hint_align=FILL_HORIZ)
+        buttonbx.horizontal = True
+        buttonbx.show()
+
+        bt = Button(self, text="Create")
+        bt.callback_clicked_add(self.createFolder)
+        bt.show()
+
+        bt2 = Button(self, text="Cancel")
+        bt2.callback_clicked_add(self.closePopup)
+        bt2.show()
+
+        buttonbx.pack_end(bt)
+        buttonbx.pack_end(bt2)
+        
+        bx.pack_end(lbl)
+        bx.pack_end(en)
+        bx.pack_end(buttonbx)
 
         if defaultPopulate:
             self.populateFiles(startPath)
+
+    def createFolder(self, obj):
+        newDir = "%s%s"%(self.currentDirectory, self.createEn.text)
+        os.makedirs(newDir)
+        self.closePopup()
+        self.populateFiles(self.currentDirectory)
+
+    def createFolderButtonPressed(self, obj):
+        self.createEn.text = ""
+        self.createPopup.activate()
+        self.createEn.select_all()
+    
+    def closePopup(self, btn=None):
+        self.createPopup.hide()
 
     def shutdown(self, obj=None):
         self._timer.delete()
@@ -335,13 +400,13 @@ class FileSelector(Box):
         pen_dir = len(self.pendingFolders)
         pen_file = len(self.pendingFiles)
         if pen_dir:
-            for i in range(int(math.sqrt(pen_dir))):
-                ourPath, d, isDir = self.pendingFolders.pop(i)
-                self.packFileFolder(ourPath, d, isDir)
+            #for i in range(int(math.sqrt(pen_dir))):
+            ourPath, d, isDir = self.pendingFolders.pop(0)
+            self.packFileFolder(ourPath, d, isDir)
         elif pen_file:
-            for i in range(int(math.sqrt(pen_file))):
-                ourPath, d, isDir = self.pendingFiles.pop(i)
-                self.packFileFolder(ourPath, d, isDir)
+            #for i in range(int(math.sqrt(pen_file))):
+            ourPath, d, isDir = self.pendingFiles.pop(0)
+            self.packFileFolder(ourPath, d, isDir)
 
         #else:
         #    self._timer.freeze()
@@ -524,6 +589,11 @@ class FileSelector(Box):
 
         self.actionButton.text = "%s  "%ourMode
         self.actionIcon.standard_set("document-%s"%ourMode.lower())
+        
+        if self.mode != "save":
+            self.createFolderButton.hide()
+        else:
+            self.createFolderButton.show()
 
     def eventsCb(self, obj, src, event_type, event):
         if event.modifier_is_set("Control") and event_type == EVAS_CALLBACK_KEY_DOWN:
