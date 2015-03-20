@@ -218,7 +218,7 @@ class FileSelector(Box):
         
         self.fileSortButton = Button(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ)
-        self.fileSortButton.text = u"⬇ Name"
+        self.fileSortButton.text = u"⬆ Name"
         self.fileSortButton.callback_pressed_add(self.sortData)
         self.fileSortButton.show()
         
@@ -289,7 +289,7 @@ class FileSelector(Box):
         if defaultPopulate:
             self.populateFiles(startPath)
 
-    def shutdown(self):
+    def shutdown(self, obj=None):
         self._timer.delete()
         self.threadedFunction.shutdown()
 
