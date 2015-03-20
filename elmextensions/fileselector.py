@@ -15,6 +15,9 @@ from efl.elementary.entry import Entry, ELM_INPUT_HINT_AUTO_COMPLETE
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 from efl import ecore
 
+#imported to work around a bug
+import efl.elementary.layout
+
 import os
 import math
 from .easythreading import ThreadedFunction
