@@ -333,7 +333,7 @@ class FileSelector(Box):
     def populateFile(self):
         pen_len = len(self.pendingFiles)
         if pen_len:
-            for i in range(max(1, int(math.sqrt(pen_len)))):
+            for i in range(int(math.sqrt(pen_len))):
                 ourPath, d, isDir = self.pendingFiles.pop(i)
                 self.packFileFolder(ourPath, d, isDir)
 
