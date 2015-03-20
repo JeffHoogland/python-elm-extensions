@@ -10,7 +10,7 @@ from efl.elementary.button import Button
 from efl.elementary.hoversel import Hoversel
 from efl.elementary.separator import Separator
 from efl.elementary.panes import Panes
-from efl.elementary.innerwindow import InnerWindow
+from efl.elementary.popup import Popup
 from efl.elementary.entry import Entry, ELM_INPUT_HINT_AUTO_COMPLETE
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 from efl import ecore
@@ -299,43 +299,24 @@ class FileSelector(Box):
 
         self.populateBookmarks()
         
-        self.createPopup = InnerWindow(parent_widget)
-        
-        bx = Box(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH)
-        bx.show()
-        
-        self.createPopup.content = bx
-
-        lbl = Label(self)
-        lbl.text = "<b>Create Folder:</b>"
-        lbl.show()
+        self.createPopup = Popup(self)
+        self.createPopup.part_text_set("title,text", "Create Folder:")
 
         self.createEn = en = Entry(self, size_hint_weight=EXPAND_HORIZ,
                 size_hint_align=FILL_HORIZ)
         en.single_line_set(True)
         en.scrollable_set(True)
         en.show()
-
-        buttonbx = Box(self, size_hint_weight=EXPAND_HORIZ,
-                size_hint_align=FILL_HORIZ)
-        buttonbx.horizontal = True
-        buttonbx.show()
+        
+        self.createPopup.content = en
 
         bt = Button(self, text="Create")
         bt.callback_clicked_add(self.createFolder)
-        bt.show()
+        self.createPopup.part_content_set("button1", bt)
 
         bt2 = Button(self, text="Cancel")
         bt2.callback_clicked_add(self.closePopup)
-        bt2.show()
-
-        buttonbx.pack_end(bt)
-        buttonbx.pack_end(bt2)
-        
-        bx.pack_end(lbl)
-        bx.pack_end(en)
-        bx.pack_end(buttonbx)
+        self.createPopup.part_content_set("button2", bt2)
 
         if defaultPopulate:
             self.populateFiles(startPath)
@@ -348,7 +329,7 @@ class FileSelector(Box):
 
     def createFolderButtonPressed(self, obj):
         self.createEn.text = ""
-        self.createPopup.activate()
+        self.createPopup.show()
         self.createEn.select_all()
     
     def closePopup(self, btn=None):
