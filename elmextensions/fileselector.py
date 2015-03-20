@@ -491,7 +491,7 @@ class FileSelector(Box):
         con.standard_set("gtk-directory")
         con.show()
         it = self.bookmarksList.item_append(self.selectedFolder.text, icon=con)
-        it.data["path"] = toAppend[7:]
+        it.data["path"] = "%s%s"%(self.filepathEntry.text, self.selectedFolder.text)
 
         self.bookmarksList.go()
 
