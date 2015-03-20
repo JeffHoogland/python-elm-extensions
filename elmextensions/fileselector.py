@@ -74,6 +74,7 @@ class FileSelector(Box):
         self.focusedEntry = None
         self.sortReverse = False
         self.addingHidden = False
+        self.pendingFolders = []
         self.pendingFiles = []
         self.currentSubFolders = []
         self.currentFiles = []
@@ -331,9 +332,14 @@ class FileSelector(Box):
             it.data["path"] = bk[7:]
 
     def populateFile(self):
-        pen_len = len(self.pendingFiles)
-        if pen_len:
-            for i in range(int(math.sqrt(pen_len))):
+        pen_dir = len(self.pendingFolders)
+        pen_file = len(self.pendingFiles)
+        if pen_dir:
+            for i in range(int(math.sqrt(pen_dir))):
+                ourPath, d, isDir = self.pendingFolders.pop(i)
+                self.packFileFolder(ourPath, d, isDir)
+        elif pen_file:
+            for i in range(int(math.sqrt(pen_file))):
                 ourPath, d, isDir = self.pendingFiles.pop(i)
                 self.packFileFolder(ourPath, d, isDir)
 
@@ -345,8 +351,6 @@ class FileSelector(Box):
     def populateFiles(self, ourPath):
         self.autocompleteHover.hover_end()
 
-        del self.pendingFiles[:]
-
         if ourPath[:-1] != "/":
             ourPath = ourPath + "/"
 
@@ -356,8 +360,8 @@ class FileSelector(Box):
             if self.directoryChangeCallback:
                 self.directoryChangeCallback(ourPath)
 
-            self.currentSubFolders = []
-            self.currentFiles = []
+            del self.currentSubFolders[:]
+            del self.currentFiles[:]
             self.fileList.clear()
         else:
             self.addingHidden = True
@@ -372,30 +376,33 @@ class FileSelector(Box):
         ourPath = self.currentDirectory
         
         data = os.listdir(ourPath)
-        
-        sortedData = []
 
         for d in data:
             isDir = os.path.isdir("%s%s"%(ourPath, d))
 
             if isDir:
-                self.currentSubFolders.append(d)
-                if self.sortReverse:
-                    sortedData.append([1, d])
-                else:
-                    sortedData.append([0, d])
+                #print("%s is a dir"%d)
+                if d not in self.currentSubFolders:
+                    self.currentSubFolders.append(d)
             else:
-                self.currentFiles.append(d)
-                if self.sortReverse:
-                    sortedData.append([0, d])
-                else:
-                    sortedData.append([1, d])
+                #print("%s is a file"%d)
+                if d not in self.currentFiles:
+                    self.currentFiles.append(d)
 
-        sortedData.sort(reverse=self.sortReverse)
+        self.currentSubFolders.sort(reverse=self.sortReverse)
+        self.currentFiles.sort(reverse=self.sortReverse)
         
-        for ourFile in sortedData:
-            d = ourFile[1]
-            isDir = ourFile[0] if self.sortReverse else not ourFile[0]
+        #print(sortedData)
+        
+        for d in self.currentSubFolders:
+            isDir = True
+            if self.addingHidden and d[0] == ".":
+                self.pendingFolders.append([ourPath, d, isDir])
+            elif (d[0] != "." or self.showHidden) and not self.addingHidden:
+                self.pendingFolders.append([ourPath, d, isDir])
+        
+        for d in self.currentFiles:
+            isDir = False
             if self.addingHidden and d[0] == ".":
                 self.pendingFiles.append([ourPath, d, isDir])
             elif (d[0] != "." or self.showHidden) and not self.addingHidden:
