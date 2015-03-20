@@ -15,23 +15,19 @@ FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 class MainWindow(object):
     def __init__( self ):
         win = StandardWindow("Testing", "Elementary File Selector")
-        win.callback_delete_request_add(lambda o: self.qExit())
+        win.callback_delete_request_add(lambda o: elm.exit())
 
         self.fs = fs = FileSelector(win, size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
         #fs.setMode("Open")
         fs.show()
         
         fs.callback_activated_add(self.showFile)
-        fs.callback_cancel_add(self.qExit)
+        fs.callback_cancel_add(lambda o: elm.exit())
         
         win.resize_object_add(fs)
 
         win.resize(600, 400)
         win.show()
-        
-    def qExit(self, fs=False):
-        self.fs.shutdown()
-        elm.exit()
         
     def showFile(self, fs, ourFile):
         print(ourFile)
@@ -39,4 +35,5 @@ class MainWindow(object):
 if __name__ == "__main__":
     GUI = MainWindow()
     elm.run()
+    GUI.fs.shutdown()
     elm.shutdown()

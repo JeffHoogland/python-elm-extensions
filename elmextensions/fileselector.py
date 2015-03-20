@@ -3,9 +3,9 @@
 from efl.elementary.label import Label
 from efl.elementary.icon import Icon
 from efl.elementary.box import Box
-from efl.elementary.table import Table
-from efl.elementary.frame import Frame
-from efl.elementary.list import List, ListItem
+from efl.elementary.list import List
+from efl.elementary.genlist import Genlist, GenlistItem, GenlistItemClass, \
+    ELM_LIST_COMPRESS
 from efl.elementary.button import Button
 from efl.elementary.hoversel import Hoversel
 from efl.elementary.separator import Separator
@@ -15,12 +15,44 @@ from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 from efl import ecore
 
 import os
+import math
 from .easythreading import ThreadedFunction
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
 FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 FILL_HORIZ = EVAS_HINT_FILL, 0.5
+
+
+class FileGLIC(GenlistItemClass):
+
+    def text_get(self, gl, part, data):
+        return data["d"]
+
+    def content_get(self, gl, part, data):
+        if part == "elm.swallow.icon":
+            return Icon(
+                gl,
+                standard="gtk-file"
+                )
+
+fileglic = FileGLIC(item_style="one_icon")
+
+
+class DirGLIC(GenlistItemClass):
+
+    def text_get(self, gl, part, data):
+        return data["d"]
+
+    def content_get(self, gl, part, data):
+        if part == "elm.swallow.icon":
+            return Icon(
+                gl,
+                standard="gtk-directory"
+                )
+
+dirglic = DirGLIC(item_style="one_icon")
+
 
 class FileSelector(Box):
     def __init__(self, parent_widget, defaultPath="", defaultPopulate=True, *args, **kwargs):
@@ -31,7 +63,7 @@ class FileSelector(Box):
         self.directoryChangeCallback = None
         
         self.threadedFunction = ThreadedFunction()
-        self._timer = ecore.Timer(0.01, self.populateFile)
+        self._timer = ecore.Timer(0.02, self.populateFile)
 
         #Watch key presses for ctrl+l to select entry
         parent_widget.elm_event_callback_add(self.eventsCb)
@@ -189,8 +221,9 @@ class FileSelector(Box):
         self.fileSortButton.callback_pressed_add(self.sortData)
         self.fileSortButton.show()
         
-        self.fileList = List(self, size_hint_weight=EXPAND_BOTH,
-                size_hint_align=FILL_BOTH)
+        self.fileList = Genlist(self, size_hint_weight=EXPAND_BOTH,
+                size_hint_align=FILL_BOTH, homogeneous=True,
+                mode=ELM_LIST_COMPRESS)
         self.fileList.callback_activated_add(self.fileDoubleClicked)
         self.fileList.show()
         
@@ -256,6 +289,7 @@ class FileSelector(Box):
             self.populateFiles(startPath)
 
     def shutdown(self):
+        self._timer.delete()
         self.threadedFunction.shutdown()
 
     def sortData(self, btn):
@@ -297,9 +331,12 @@ class FileSelector(Box):
             it.data["path"] = bk[7:]
 
     def populateFile(self):
-        if len(self.pendingFiles):
-            ourPath, d, isDir = self.pendingFiles.pop(0)
-            self.packFileFolder(ourPath, d, isDir)
+        pen_len = len(self.pendingFiles)
+        if pen_len:
+            for i in range(max(1, int(math.sqrt(pen_len)))):
+                ourPath, d, isDir = self.pendingFiles.pop(i)
+                self.packFileFolder(ourPath, d, isDir)
+
         #else:
         #    self._timer.freeze()
         
@@ -365,23 +402,13 @@ class FileSelector(Box):
                 self.pendingFiles.append([ourPath, d, isDir])
 
     def packFileFolder(self, ourPath, d, isDir):
-        con = Icon(self, size_hint_weight=EXPAND_HORIZ,
-                    size_hint_align=FILL_HORIZ)
-        con.show()
-
-        li = ListItem(d, icon=con, callback=self.listItemSelected)
-        
         if isDir:
-            con.standard_set("gtk-directory")
-            li.data["type"] = "dir"
+            li = GenlistItem(item_data={"type": "dir", "path": ourPath, "d": d}, item_class=dirglic, func=self.listItemSelected)
         else:
-            con.standard_set("gtk-file")
-            li.data["type"] = "file"
+            li = GenlistItem(item_data={"type": "file", "path": ourPath, "d": d}, item_class=fileglic, func=self.listItemSelected)
             
-        li.data["path"] = ourPath
-
         li.append_to(self.fileList)
-        self.fileList.go()
+        #self.fileList.go()
         #print("Adding: %s %s %s"%(ourPath, d, isDir))
 
     def fileDoubleClicked(self, obj, item=None, eventData=None):
@@ -411,7 +438,7 @@ class FileSelector(Box):
         self.removeButton.disabled = True
         self.populateFiles(item.data["path"])
 
-    def listItemSelected(self, lst, item, event_type):
+    def listItemSelected(self, item, gl, data):
         if item.data["type"] == "dir":
             self.directorySelected(item)
         else:
