@@ -21,6 +21,7 @@ import efl.elementary.layout
 import os
 import math
 from .easythreading import ThreadedFunction
+from collections import deque
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
 EXPAND_HORIZ = EVAS_HINT_EXPAND, 0.0
@@ -78,8 +79,7 @@ class FileSelector(Box):
         self.focusedEntry = None
         self.sortReverse = False
         self.addingHidden = False
-        self.pendingFolders = []
-        self.pendingFiles = []
+        self.pendingFiles = deque()
         self.currentSubFolders = []
         self.currentFiles = []
 
@@ -381,16 +381,11 @@ class FileSelector(Box):
             it.data["path"] = bk[7:]
 
     def populateFile(self):
-        pen_dir = len(self.pendingFolders)
         pen_file = len(self.pendingFiles)
-        if pen_dir:
-            #for i in range(int(math.sqrt(pen_dir))):
-            ourPath, d, isDir = self.pendingFolders.pop(0)
-            self.packFileFolder(ourPath, d, isDir)
-        elif pen_file:
-            #for i in range(int(math.sqrt(pen_file))):
-            ourPath, d, isDir = self.pendingFiles.pop(0)
-            self.packFileFolder(ourPath, d, isDir)
+        if pen_file:
+            for _ in range(int(math.sqrt(pen_file))):
+                ourPath, d, isDir = self.pendingFiles.popleft()
+                self.packFileFolder(ourPath, d, isDir)
 
         #else:
         #    self._timer.freeze()
@@ -399,6 +394,8 @@ class FileSelector(Box):
 
     def populateFiles(self, ourPath):
         self.autocompleteHover.hover_end()
+
+        self.pendingFiles.clear()
 
         if ourPath[:-1] != "/":
             ourPath = ourPath + "/"
@@ -424,34 +421,31 @@ class FileSelector(Box):
     def getFolderContents(self):
         ourPath = self.currentDirectory
         
-        data = os.listdir(ourPath)
+        data = os.listdir(unicode(ourPath))
+        
+        sortedData = []
 
         for d in data:
             isDir = os.path.isdir("%s%s"%(ourPath, d))
 
             if isDir:
-                #print("%s is a dir"%d)
-                if d not in self.currentSubFolders:
-                    self.currentSubFolders.append(d)
+                self.currentSubFolders.append(d)
+                if self.sortReverse:
+                    sortedData.append([1, d])
+                else:
+                    sortedData.append([0, d])
             else:
-                #print("%s is a file"%d)
-                if d not in self.currentFiles:
-                    self.currentFiles.append(d)
+                self.currentFiles.append(d)
+                if self.sortReverse:
+                    sortedData.append([0, d])
+                else:
+                    sortedData.append([1, d])
 
-        self.currentSubFolders.sort(reverse=self.sortReverse)
-        self.currentFiles.sort(reverse=self.sortReverse)
+        sortedData.sort(reverse=self.sortReverse)
         
-        #print(sortedData)
-        
-        for d in self.currentSubFolders:
-            isDir = True
-            if self.addingHidden and d[0] == ".":
-                self.pendingFolders.append([ourPath, d, isDir])
-            elif (d[0] != "." or self.showHidden) and not self.addingHidden:
-                self.pendingFolders.append([ourPath, d, isDir])
-        
-        for d in self.currentFiles:
-            isDir = False
+        for ourFile in sortedData:
+            d = ourFile[1]
+            isDir = ourFile[0] if self.sortReverse else not ourFile[0]
             if self.addingHidden and d[0] == ".":
                 self.pendingFiles.append([ourPath, d, isDir])
             elif (d[0] != "." or self.showHidden) and not self.addingHidden:
@@ -652,7 +646,7 @@ class FileSelector(Box):
             self.fileEntry.cursor_end_set()
 
     def filepathEditDone(self, en):
-        if os.path.isdir(en.text):
+        if os.path.isdir(en.text) and en.text != self.currentDirectory:
             self.populateFiles(en.text)
             self.filepathEntry.cursor_end_set()
         else:
