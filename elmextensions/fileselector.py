@@ -421,7 +421,10 @@ class FileSelector(Box):
     def getFolderContents(self):
         ourPath = self.currentDirectory
         
-        data = os.listdir(unicode(ourPath))
+        try:
+            data = os.listdir(unicode(ourPath))
+        except:
+            data = os.listdir(str(ourPath))
         
         sortedData = []
 
