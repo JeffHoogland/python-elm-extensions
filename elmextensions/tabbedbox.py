@@ -23,6 +23,9 @@ class TabbedBox(Box):
 
         self.tabs = []
         self.currentTab = None
+        self.tabChangedCallback = None
+        self.closeCallback = None
+        self.emptyCallback = None
 
         self.scr = Scroller(self, size_hint_weight=EXPAND_HORIZ,
                            size_hint_align=FILL_BOTH)
@@ -97,18 +100,33 @@ class TabbedBox(Box):
             self.nf.item_simple_push(widget)
             self.currentTab = widget
             self.currentTab.data["button"].style="widget"
+            
+            if self.tabChangedCallback:
+                self.tabChangedCallback(self, widget)
     
     def closeTab(self, btn):
-        del self.tabs[self.tabs.index(btn.data["widget"])]
+        if not self.closeCallback:
+            self.deleteTab(btn.data["widget"])
+        else:
+            self.closeCallback(self, btn.data["widget"])
+    
+    def deleteTab(self, widget):
+        if type(widget) is int:
+            widget = self.tabs[tabIndex]
         
-        self.buttonBox.unpack(btn.data["widget"].data["close"])
-        self.buttonBox.unpack(btn.data["widget"].data["button"])
-        self.buttonBox.unpack(btn.data["widget"].data["sep"])
+        del self.tabs[self.tabs.index(widget)]
         
-        btn.data["widget"].data["close"].delete()
-        btn.data["widget"].data["button"].delete()
-        btn.data["widget"].data["sep"].delete()
-        btn.data["widget"].delete()
+        self.buttonBox.unpack(widget.data["close"])
+        self.buttonBox.unpack(widget.data["button"])
+        self.buttonBox.unpack(widget.data["sep"])
         
-        if self.currentTab == btn.data["widget"] and len(self.tabs):
+        widget.data["close"].delete()
+        widget.data["button"].delete()
+        widget.data["sep"].delete()
+        widget.delete()
+        
+        if self.currentTab == widget and len(self.tabs):
             self.showTab(widget=self.tabs[0])
+            
+        if not len(self.tabs) and self.emptyCallback:
+            self.emptyCallback(self)

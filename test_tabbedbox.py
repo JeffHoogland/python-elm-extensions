@@ -15,6 +15,7 @@ class MainWindow(object):
         win.callback_delete_request_add(lambda o: elm.exit())
 
         tabbs = TabbedBox(win, size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
+        tabbs.closeCallback = self.closeChecks
         
         for i in range(10):
             lbl = Label(win)
@@ -31,6 +32,11 @@ class MainWindow(object):
 
         win.resize(600, 400)
         win.show()
+    
+    def closeChecks(self, tabbs, widget):
+        print widget.text
+        if widget.text != "Tab 1":
+            tabbs.deleteTab(widget)
 
 if __name__ == "__main__":
     GUI = MainWindow()
