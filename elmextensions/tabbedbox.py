@@ -77,11 +77,12 @@ class TabbedBox(Box):
         self.showTab(widget=widget)
     
     def showTab(self, btn=None, widget=None):
-        if self.currentTab:
-            self.currentTab.data["button"].style="anchor"
-        self.nf.item_simple_push(widget)
-        self.currentTab = widget
-        self.currentTab.data["button"].style="widget"
+        if widget != self.currentTab:
+            if self.currentTab:
+                self.currentTab.data["button"].style="anchor"
+            self.nf.item_simple_push(widget)
+            self.currentTab = widget
+            self.currentTab.data["button"].style="widget"
     
     def closeTab(self, btn):
         del self.tabs[self.tabs.index(btn.data["widget"])]
