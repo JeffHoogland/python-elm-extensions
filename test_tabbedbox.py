@@ -22,6 +22,9 @@ class MainWindow(object):
             lbl.show()
             tabbs.addTab(lbl, "Tab %s"%i)
         
+        tabbs.disableTab(0)
+        tabbs.disableTab(3)
+        
         tabbs.show()
         
         win.resize_object_add(tabbs)

@@ -43,12 +43,13 @@ class TabbedBox(Box):
         self.pack_end(self.scr)
         self.pack_end(self.nf)
         
-    def addTab(self, widget, tabName, canClose=True):
+    def addTab(self, widget, tabName, canClose=True, disabled=False):
         self.tabs.append(widget)
 
         btn = Button(self.buttonBox, style="anchor", size_hint_align=ALIGN_LEFT)
         btn.text = tabName
         btn.data["widget"] = widget
+        btn.disabled = disabled
         btn.callback_clicked_add(self.showTab, widget)
         btn.show()
 
@@ -59,6 +60,7 @@ class TabbedBox(Box):
         cls = Button(self.buttonBox, content=icn, style="anchor", size_hint_align=ALIGN_LEFT)
         cls.data["widget"] = widget
         cls.callback_clicked_add(self.closeTab)
+        cls.disabled = disabled
         if canClose:
             cls.show()
 
@@ -76,7 +78,19 @@ class TabbedBox(Box):
         
         self.showTab(widget=widget)
     
+    def disableTab(self, tabIndex):
+        btn, cls = self.tabs[tabIndex].data["button"], self.tabs[tabIndex].data["close"]
+        btn.disabled = True
+        cls.disabled = True
+        
+    def enableTab(self, tabIndex):
+        btn, cls = self.tabs[tabIndex].data["button"], self.tabs[tabIndex].data["close"]
+        btn.disabled = False
+        cls.disabled = False
+    
     def showTab(self, btn=None, widget=None):
+        if type(btn) is int:
+            widget = self.tabs[btn]
         if widget != self.currentTab:
             if self.currentTab:
                 self.currentTab.data["button"].style="anchor"

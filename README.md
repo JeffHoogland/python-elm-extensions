@@ -1,9 +1,11 @@
 A library that contains a few more complex elementary objects for easy importing/usage.
 
 Current Objects:
+
 - SortedList 
 
-![alt text](http://www.enlightenment.org/ss/e-54cbaf75b94f99.93538783.png "SortedList")
+![alt text](https://www.enlightenment.org/ss/e-550e481ac09c94.28813425.png "SortedList")
+
 - EmbeddedTerminal 
 
 ![alt text](https://www.enlightenment.org/ss/e-54ca23811cf6e3.06249212.png "EmbeddedTerminal") 
@@ -14,7 +16,11 @@ Current Objects:
 
 - FileSelector
 
-![alt text](http://www.enlightenment.org/ss/e-54ceb31346bef2.90480104.png "FileSelector")
+![alt text](https://www.enlightenment.org/ss/e-550e47faa29009.96396030.png "FileSelector")
+
+- TabbedBox
+
+![alt text](https://www.enlightenment.org/ss/e-550e47dbb37520.39053036.png "TabbedBox")
 
 Credits: 
 - [Jeff Hoogland](http://www.jeffhoogland.com/)
