@@ -112,7 +112,7 @@ class TabbedBox(Box):
     
     def deleteTab(self, widget):
         if type(widget) is int:
-            widget = self.tabs[tabIndex]
+            widget = self.tabs[widget]
         
         del self.tabs[self.tabs.index(widget)]
         
