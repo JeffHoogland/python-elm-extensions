@@ -29,7 +29,7 @@ class TabbedBox(Box):
         self.scr.content_min_limit(False, True)
 
         self.buttonBox = Box(self.scr, size_hint_weight=EXPAND_HORIZ,
-                           size_hint_align=ALIGN_LEFT)
+                           align=ALIGN_LEFT)
         self.buttonBox.horizontal = True
         self.buttonBox.show()
 
