@@ -5,3 +5,4 @@ from .fileselector import *
 from .tabbedbox import *
 from .StandardButton import *
 from .StandardPopup import *
+from .SearchableList import *

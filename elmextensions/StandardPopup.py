@@ -17,8 +17,8 @@ FILL_BOTH = EVAS_HINT_FILL, EVAS_HINT_FILL
 FILL_HORIZ = EVAS_HINT_FILL, 0.5
 ALIGN_CENTER = 0.5, 0.5
 
-def StandardPopup(ourParent, ourMsg, ourIcon=None):
-    ourPopup = Popup(ourParent, size_hint_weight=EXPAND_BOTH)
+def StandardPopup(ourParent, ourMsg, ourIcon=None, *args, **kwargs):
+    ourPopup = Popup(ourParent, *args, **kwargs)
     ourPopup.callback_block_clicked_add(lambda obj: ourPopup.delete())
 
     # Add a table to hold dialog image and text to Popup
