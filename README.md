@@ -22,6 +22,10 @@ Current Objects:
 
 ![alt text](https://www.enlightenment.org/ss/e-550e47dbb37520.39053036.png "TabbedBox")
 
+- SearchableList
+
+![alt text](http://www.enlightenment.org/ss/e-563689363f47b8.13740731.jpg "SearchableList")
+
 Credits: 
 - [Jeff Hoogland](http://www.jeffhoogland.com/)
 - [Kai Huuhko](https://github.com/kaihu)
