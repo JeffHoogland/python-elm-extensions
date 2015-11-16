@@ -77,6 +77,7 @@ class FileSelector(Box):
         self.showHidden = False
         self.currentDirectory = None
         self.focusedEntry = None
+        self.folderOnly = False
         self.sortReverse = False
         self.addingHidden = False
         self.pendingFiles = deque()
@@ -323,6 +324,14 @@ class FileSelector(Box):
 
         if defaultPopulate:
             self.populateFiles(startPath)
+
+    def folderOnlySet(self, ourValue):
+        self.folderOnly = ourValue
+        
+        if not self.folderOnly:
+            self.filenameBox.show()
+        else:
+            self.filenameBox.hide()
 
     def createFolder(self, obj):
         newDir = "%s%s"%(self.currentDirectory, self.createEn.text)
@@ -604,8 +613,11 @@ class FileSelector(Box):
             self.cancelCallback(self)
 
     def actionButtonPressed(self, btn):
-        if self.actionCallback and self.fileEntry.text:
-            self.actionCallback(self, "%s%s"%(self.filepathEntry.text, self.fileEntry.text))
+        if self.actionCallback:
+            if not self.folderOnly and self.fileEntry.text:
+                self.actionCallback(self, "%s%s"%(self.filepathEntry.text, self.fileEntry.text))
+            elif self.folderOnly:
+                self.actionCallback(self, "%s"%(self.filepathEntry.text))
 
     def fileEntryChanged(self, en):
         typed = en.text.split("/")[-1]
