@@ -12,6 +12,7 @@ from efl.elementary.separator import Separator
 from efl.elementary.panes import Panes
 from efl.elementary.popup import Popup
 from efl.elementary.entry import Entry, ELM_INPUT_HINT_AUTO_COMPLETE
+from efl.elementary.image import Image
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL, EVAS_CALLBACK_KEY_DOWN
 from efl import ecore
 
@@ -233,8 +234,14 @@ class FileSelector(Box):
         self.fileList.callback_activated_add(self.fileDoubleClicked)
         self.fileList.show()
         
+        self.previewImage = previewImage = Image(self)
+        #previewImage.size_hint_weight = EXPAND_BOTH
+        previewImage.size_hint_align = FILL_BOTH
+        previewImage.show()
+        
         self.fileListBox.pack_end(self.fileSortButton)
         self.fileListBox.pack_end(self.fileList)
+        self.fileListBox.pack_end(self.previewImage)
 
         self.fileSelectorBox.part_content_set("left", self.bookmarkBox)
         self.fileSelectorBox.part_content_set("right", self.fileListBox)
@@ -512,6 +519,13 @@ class FileSelector(Box):
         self.addButton.disabled = True
         self.removeButton.disabled = True
         self.selectedFolder = None
+        
+        #Update image preview if an image is selected
+        if ourFile[-3:] in ["jpg", "png", "gif"]:
+            self.previewImage.file_set("%s/%s"%(self.filepathEntry.text, ourFile))
+            self.previewImage.size_hint_weight = (1.0, 0.4)
+        else:
+            self.previewImage.size_hint_weight = (0, 0)
 
     def directorySelected(self, btn):
         ourPath = btn.data["path"]
