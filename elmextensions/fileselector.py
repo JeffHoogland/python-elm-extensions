@@ -265,7 +265,7 @@ class FileSelector(Box):
 
         cancelIcon = Icon(self, size_hint_weight=EXPAND_BOTH,
                 size_hint_align=FILL_BOTH)
-        cancelIcon.standard_set("dialog-cancel")
+        cancelIcon.standard_set("exit")
         cancelIcon.show()
 
         self.cancelButton = Button(self, size_hint_weight=(0.0, 0.0),
