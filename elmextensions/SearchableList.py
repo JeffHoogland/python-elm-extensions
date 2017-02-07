@@ -1,3 +1,6 @@
+import sys
+reload(sys) 
+sys.setdefaultencoding('utf8')
 
 from efl.elementary.box import Box
 from efl.elementary.frame import Frame
@@ -46,10 +49,24 @@ class SearchableList(Box):
     def callback_item_focused_add( self, ourCB ):
         self.ourList.callback_item_focused_add( ourCB )
     
-    def item_append( self, text ):
-        item = self.ourList.item_append(text)
-        self.ourItems.append(item)
+    def callback_clicked_double_add( self, ourCB ):
+        self.ourList.callback_clicked_double_add( ourCB )
+    
+    def item_append( self, text, ourIcon=None ):
         self.keys.append(text)
+        self.keys.sort()
+        
+        itemSpot = self.keys.index(text)
+        
+        if not len(self.ourItems) or itemSpot > len(self.ourItems)-1:
+            item = self.ourList.item_append(text, icon=ourIcon)
+            self.ourItems.append(item)
+        else:
+            #print("Inserting after item %s"%self.ourItems[itemSpot])
+            item = self.ourList.item_insert_before(self.ourItems[itemSpot], text, icon=ourIcon)
+            self.ourItems.insert(itemSpot, item)
+        
+        return item
     
     def items_get( self ):
         return self.ourList.items_get()
