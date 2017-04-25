@@ -1,6 +1,9 @@
-import sys
-reload(sys) 
-sys.setdefaultencoding('utf8')
+try:
+    import sys
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+except NameError:
+   pass
 
 from efl.elementary.box import Box
 from efl.elementary.frame import Frame
