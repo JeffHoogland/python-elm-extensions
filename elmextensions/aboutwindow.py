@@ -2,7 +2,6 @@ from efl.ecore import Exe
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 from efl import elementary
 from efl.elementary.window import Window, ELM_WIN_DIALOG_BASIC
-from efl.elementary.window import ELM_WIN_DIALOG_BASIC
 from efl.elementary.background import Background
 from efl.elementary.box import Box
 from efl.elementary.button import Button
