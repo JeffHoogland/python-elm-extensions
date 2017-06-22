@@ -2,7 +2,7 @@ from efl import ecore
 from efl.elementary.box import Box
 from efl.elementary.frame import Frame
 from efl.elementary.button import Button
-from efl.elementary.entry import Entry
+from efl.elementary.entry import Entry, markup_to_utf8
 from efl.evas import EVAS_HINT_EXPAND, EVAS_HINT_FILL
 
 EXPAND_BOTH = EVAS_HINT_EXPAND, EVAS_HINT_EXPAND
@@ -63,6 +63,7 @@ class EmbeddedTerminal(Box):
             self.inPut.text = ""
             
     def runCommand(self, command, done_cb=None):
+        command = markup_to_utf8(command)
         self.cmd_exe = cmd = ecore.Exe(
             command,
             ecore.ECORE_EXE_PIPE_READ |
