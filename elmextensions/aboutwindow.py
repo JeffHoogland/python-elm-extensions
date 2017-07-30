@@ -23,12 +23,22 @@ FILL_VERT = 0.5, EVAS_HINT_FILL
 def xdg_open(url_or_file):
     Exe('xdg-open "%s"' % url_or_file)
 
+class InstanceError(Exception):
+    pass
+
 class AboutWindow(Window):
+    __initialized = False
+
     def __init__(self, parent, title="About", standardicon="dialog-information", \
                         version="N/A", authors="No One", \
                         licen="GPL", webaddress="", info="Something, something, turtles"):
+
+        if AboutWindow.__initialized:
+            raise InstanceError("You can't create more than 1 instance of AboutWindow")
+        AboutWindow.__initialized = True
+
         Window.__init__(self, title, ELM_WIN_DIALOG_BASIC, autodel=True)
-        
+        self.callback_delete_request_add(self.close_inst)
         background = Background(self, size_hint_weight=EXPAND_BOTH)
         self.resize_object_add(background)
         background.show()
@@ -91,3 +101,6 @@ class AboutWindow(Window):
 
         self.resize(400, 200)
         self.show()
+
+    def close_inst(self, obj):
+        AboutWindow.__initialized = False
