@@ -12,7 +12,6 @@ class MainWindow(object):
     def __init__( self ):
         win = StandardWindow("Testing", "Elementary SearchableList")
         win.callback_delete_request_add(lambda o: elm.exit())
-        win.show()
         
         ourList = SearchableList(win, size_hint_weight=EXPAND_BOTH, size_hint_align=FILL_BOTH)
         self.keys = ["Jeff", "Kristi", "Jacob", "Declan", "Joris", 
